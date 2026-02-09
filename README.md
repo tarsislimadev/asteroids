@@ -1,0 +1,5 @@
+# Asteroids
+
+## license
+
+[MIT](./LICENSE)
