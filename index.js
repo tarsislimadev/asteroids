@@ -1,8 +1,8 @@
 document.body.style.margin = 0;
-
 import * as THREE from 'three';
-
 import { Peer } from 'peerjs';
+
+const state = { shot: false, }
 
 // Create a new EventTarget to manage custom events
 const ee = new EventTarget();
@@ -48,11 +48,47 @@ group.add(triangle);
 // Animation loop
 const moves = { rotation: 0, forward: 0, }
 
+const animations = {
+  move: () => {
+    triangle.rotation.z += moves.rotation;
+    triangle.position.x += moves.forward * Math.sin(-triangle.rotation.z);
+    triangle.position.y += moves.forward * Math.cos(-triangle.rotation.z);
+  },
+  shot: () => {
+    if (!state.shot) return;
+
+    const shot = new THREE.Mesh(
+      new THREE.SphereGeometry(0.1, 16, 16),
+      new THREE.MeshBasicMaterial({ color: 0xff9900 })
+    );
+
+    const { x, y } = triangle.position.clone();
+    shot.position.set(x, y, -0.1); // Ensure shot is in back of the triangle
+    group.add(shot);
+
+    // Move shot forward in the direction the triangle is facing
+    const shotSpeed = 0.5;
+    const shotDirection = new THREE.Vector3(
+      Math.sin(-triangle.rotation.z),
+      Math.cos(-triangle.rotation.z),
+      0
+    ).normalize();
+
+    const shotInterval = setInterval(() => {
+      shot.position.addScaledVector(shotDirection, shotSpeed);
+      // Remove shot if it goes too far
+      if (Math.abs(shot.position.x) > 100 || Math.abs(shot.position.y) > 100) {
+        group.remove(shot);
+        clearInterval(shotInterval);
+      }
+    }, 16);
+  }
+}
+
 function animate() {
   requestAnimationFrame(animate);
-  triangle.rotation.z += moves.rotation;
-  triangle.position.x += moves.forward * Math.sin(-triangle.rotation.z);
-  triangle.position.y += moves.forward * Math.cos(-triangle.rotation.z);
+  animations.move();
+  animations.shot();
   renderer.render(scene, camera);
 }
 animate();
@@ -64,7 +100,9 @@ window.addEventListener('resize', () => {
   renderer.setSize(window.innerWidth, window.innerHeight);
 });
 
-// left and right arrow keys to rotate the triangle // up and down arrow keys to move the triangle forward and backward
+// left and right arrow keys to rotate the triangle
+// up and down arrow keys to move the triangle forward and backward
+// Make triangle shot on spacebar press
 window.addEventListener('keydown', (event) => {
   switch (event.key) {
     case 'ArrowLeft': moves.rotation = 0.1; break;
@@ -72,6 +110,7 @@ window.addEventListener('keydown', (event) => {
     case 'ArrowUp': moves.forward = 0.1; break;
     case 'ArrowDown': moves.forward = -0.1; break;
     case 'q': toggleQRcode(); break;
+    case ' ': state.shot = true; break;
   }
 });
 
@@ -79,6 +118,7 @@ window.addEventListener('keyup', (event) => {
   switch (event.key) {
     case 'ArrowLeft': case 'ArrowRight': moves.rotation = 0; break;
     case 'ArrowUp': case 'ArrowDown': moves.forward = 0; break;
+    case ' ': state.shot = false; break;
   }
 });
 
