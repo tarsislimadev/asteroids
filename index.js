@@ -2,6 +2,19 @@ document.body.style.margin = 0;
 
 import * as THREE from 'three';
 
+import { Peer } from 'peerjs';
+
+// Create a new EventTarget to manage custom events
+const ee = new EventTarget();
+
+// Create a new Peer
+const peer = new Peer();
+
+peer.on('open', (id) => {
+  console.log('My peer ID is: ' + id);
+  ee.dispatchEvent(new CustomEvent('peer.open', { detail: { id } }));
+});
+
 // Create a scene
 const scene = new THREE.Scene();
 
@@ -58,6 +71,7 @@ window.addEventListener('keydown', (event) => {
     case 'ArrowRight': moves.rotation = -0.1; break;
     case 'ArrowUp': moves.forward = 0.1; break;
     case 'ArrowDown': moves.forward = -0.1; break;
+    case 'q': toggleQRcode(); break;
   }
 });
 
@@ -67,3 +81,25 @@ window.addEventListener('keyup', (event) => {
     case 'ArrowUp': case 'ArrowDown': moves.forward = 0; break;
   }
 });
+
+const toggleQRcode = () => {
+  const qrCode = document.getElementById('qr-code');
+  if (qrCode) {
+    qrCode.remove();
+  } else {
+    const img = document.createElement('img');
+    img.id = 'qr-code';
+    img.src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=` + getGameURL();
+    img.style.position = 'fixed';
+    img.style.top = '1rem';
+    img.style.right = '1rem';
+    document.body.appendChild(img);
+  }
+}
+
+const getGameURL = (id = peer.id) => {
+  const url = new URL(window.location.href);
+  url.pathname = 'controls.html';
+  url.searchParams.set('peer', id);
+  return url.toString();
+}
