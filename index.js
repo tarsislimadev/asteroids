@@ -48,6 +48,8 @@ group.add(triangle);
 // Animation loop
 const moves = { rotation: 0, forward: 0, }
 
+const random = (max, min = 0) => Math.floor(max * Math.random()) + min;
+
 const animations = {
   move: () => {
     triangle.rotation.z += moves.rotation;
@@ -82,6 +84,34 @@ const animations = {
         clearInterval(shotInterval);
       }
     }, 16);
+  },
+  asteroid: () => {
+    const ast = new THREE.Mesh(
+      new THREE.PlaneGeometry(0.5, 0.5),
+      new THREE.MeshBasicMaterial({ color: 0x999999 }),
+    );
+
+    ast.position.set(random(10, 1), random(10, 1), -0.1); // Ensure ast is in back of the triangle
+    group.add(ast);
+
+    // Move ast forward in the direction the triangle is facing
+    const astSpeed = 0.5;
+    const astDirection = new THREE.Vector3(
+      random(1, -2),
+      random(1, -2),
+      0
+    ).normalize();
+
+    console.log('Asteroid created at', ast.position, 'moving in direction', astDirection);
+
+    const astInterval = setInterval(() => {
+      ast.position.addScaledVector(astDirection, astSpeed);
+      // Remove ast if it goes too far
+      if (Math.abs(ast.position.x) > 100 || Math.abs(ast.position.y) > 100) {
+        group.remove(ast);
+        clearInterval(astInterval);
+      }
+    }, 500);
   }
 }
 
@@ -99,6 +129,8 @@ window.addEventListener('resize', () => {
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
 });
+
+setInterval(() => animations.asteroid(), 1000);
 
 // left and right arrow keys to rotate the triangle
 // up and down arrow keys to move the triangle forward and backward
