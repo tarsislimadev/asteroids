@@ -237,5 +237,25 @@ const subtractLife = (points) => {
     state.lives = 10;
     addScore(0); // Update score display
     subtractLife(0); // Update life display
+    centerTriangle();
+    stopAnimations();
   }
+}
+
+const centerTriangle = () => {
+  triangle.position.set(0, 0, 0);
+  triangle.rotation.set(0, 0, 0);
+}
+
+const stopAnimations = () => {
+  // This is a simple way to stop animations by clearing intervals and resetting state
+  state.shot = false;
+  moves.rotation = 0;
+  moves.forward = 0;
+  // Remove all asteroids and bullets
+  group.children.forEach((child) => {
+    if (child.geometry instanceof THREE.PlaneGeometry || child.geometry instanceof THREE.SphereGeometry) {
+      group.remove(child);
+    }
+  });
 }
