@@ -2,7 +2,7 @@ document.body.style.margin = 0;
 import * as THREE from 'three';
 import { Peer } from 'peerjs';
 
-const state = { shot: false, score: 0 }
+const state = { shot: false, score: 0, lives: 10 };
 
 // Create a new EventTarget to manage custom events
 const ee = new EventTarget();
@@ -118,6 +118,14 @@ const animations = {
 
     const astInterval = setInterval(() => {
       ast.position.addScaledVector(astDirection, astSpeed);
+      // Check for collision with triangle
+      const distance = ast.position.distanceTo(triangle.position);
+      if (distance < 0.5) { // Collision threshold
+        group.remove(ast); // Remove asteroid
+        addScore(-1.0);
+        subtractLife(1);
+        clearInterval(astInterval);
+      }
       // Remove ast if it goes too far
       if (Math.abs(ast.position.x) > 100 || Math.abs(ast.position.y) > 100) {
         group.remove(ast);
@@ -204,4 +212,30 @@ const addScore = (points) => {
 
   state.score += +points;
   scoreEl.textContent = `Score: ${state.score}`;
+}
+
+const subtractLife = (points) => {
+  let lifeEl = document.getElementById('life');
+
+  if (!lifeEl) {
+    lifeEl = document.createElement('div');
+    lifeEl.id = 'life';
+    lifeEl.style.position = 'fixed';
+    lifeEl.style.top = '3rem';
+    lifeEl.style.left = '1rem';
+    lifeEl.style.fontSize = '2rem';
+    lifeEl.style.color = '#ffffff';
+    document.body.appendChild(lifeEl);
+  }
+
+  state.lives -= +points;
+  lifeEl.textContent = `Lives: ${state.lives}`;
+
+  if (state.lives <= 0) {
+    alert('Fucked! Final Score: ' + state.score);
+    state.score = 0;
+    state.lives = 10;
+    addScore(0); // Update score display
+    subtractLife(0); // Update life display
+  }
 }
