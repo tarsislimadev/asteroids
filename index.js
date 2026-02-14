@@ -2,7 +2,7 @@ document.body.style.margin = 0;
 import * as THREE from 'three';
 import { Peer } from 'peerjs';
 
-const state = { shot: false, }
+const state = { shot: false, score: 0 }
 
 // Create a new EventTarget to manage custom events
 const ee = new EventTarget();
@@ -56,32 +56,44 @@ const animations = {
     triangle.position.x += moves.forward * Math.sin(-triangle.rotation.z);
     triangle.position.y += moves.forward * Math.cos(-triangle.rotation.z);
   },
-  shot: () => {
+  bullet: () => {
     if (!state.shot) return;
 
-    const shot = new THREE.Mesh(
+    const bullet = new THREE.Mesh(
       new THREE.SphereGeometry(0.1, 16, 16),
       new THREE.MeshBasicMaterial({ color: 0xff9900 })
     );
 
     const { x, y } = triangle.position.clone();
-    shot.position.set(x, y, -0.1); // Ensure shot is in back of the triangle
-    group.add(shot);
+    bullet.position.set(x, y, -0.1); // Ensure bullet is in back of the triangle
+    group.add(bullet);
 
-    // Move shot forward in the direction the triangle is facing
-    const shotSpeed = 0.5;
-    const shotDirection = new THREE.Vector3(
+    // Move bullet forward in the direction the triangle is facing
+    const bulletSpeed = 0.5;
+    const bulletDirection = new THREE.Vector3(
       Math.sin(-triangle.rotation.z),
       Math.cos(-triangle.rotation.z),
       0
     ).normalize();
 
-    const shotInterval = setInterval(() => {
-      shot.position.addScaledVector(shotDirection, shotSpeed);
-      // Remove shot if it goes too far
-      if (Math.abs(shot.position.x) > 100 || Math.abs(shot.position.y) > 100) {
-        group.remove(shot);
-        clearInterval(shotInterval);
+    const bulletInterval = setInterval(() => {
+      bullet.position.addScaledVector(bulletDirection, bulletSpeed);
+      // Check for collision with asteroids
+      group.children.forEach((asteroid) => {
+        if (asteroid.geometry instanceof THREE.PlaneGeometry) {
+          const distance = bullet.position.distanceTo(asteroid.position);
+          if (distance < 0.3) { // Collision threshold
+            group.remove(asteroid); // Remove asteroid
+            group.remove(bullet); // Remove bullet
+            addScore(+1.0);
+            clearInterval(bulletInterval);
+          }
+        }
+      });
+      // Remove bullet if it goes too far
+      if (Math.abs(bullet.position.x) > 100 || Math.abs(bullet.position.y) > 100) {
+        group.remove(bullet);
+        clearInterval(bulletInterval);
       }
     }, 16);
   },
@@ -118,7 +130,7 @@ const animations = {
 function animate() {
   requestAnimationFrame(animate);
   animations.move();
-  animations.shot();
+  animations.bullet();
   renderer.render(scene, camera);
 }
 animate();
@@ -174,4 +186,22 @@ const getGameURL = (id = peer.id) => {
   url.pathname = 'controls.html';
   url.searchParams.set('peer', id);
   return url.toString();
+}
+
+const addScore = (points) => {
+  let scoreEl = document.getElementById('score');
+
+  if (!scoreEl) {
+    scoreEl = document.createElement('div');
+    scoreEl.id = 'score';
+    scoreEl.style.position = 'fixed';
+    scoreEl.style.top = '1rem';
+    scoreEl.style.left = '1rem';
+    scoreEl.style.fontSize = '2rem';
+    scoreEl.style.color = '#ffffff';
+    document.body.appendChild(scoreEl);
+  }
+
+  state.score += +points;
+  scoreEl.textContent = `Score: ${state.score}`;
 }
