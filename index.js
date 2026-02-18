@@ -50,6 +50,26 @@ const moves = { rotation: 0, forward: 0, }
 
 const random = (max, min = 0, floor = true) => Math[floor ? 'floor' : 'abs'](max * Math.random()) + min;
 
+const generatePosition = (side) => {
+  switch (side) {
+    case 0: return [random(10, -5), 10]  // Top
+    case 1: return [random(10, -5), -10]  // Bottom
+    case 2: return [10, random(10, -5)]  // Right
+    case 3: return [-10, random(10, -5)]  // Left
+  }
+  return [0, 0]
+}
+
+const generateDirection = (side) => {
+  switch (side) {
+    case 0: return [random(2, -1, false), random(-1, -2, false)]  // Top
+    case 1: return [random(2, -1, false), random(1, 2, false)]  // Bottom
+    case 2: return [random(-1, -2, false), random(2, -1, false)]  // Right
+    case 3: return [random(1, 2, false), random(2, -1, false)]  // Left
+  }
+  return [0, 0]
+}
+
 const animations = {
   move: () => {
     player.rotation.z += moves.rotation;
@@ -65,7 +85,7 @@ const animations = {
     );
 
     const { x, y } = player.position.clone();
-    bullet.position.set(x, y, -0.1); // Ensure bullet is in back of the triangle
+    bullet.position.set(x, y, 0);
     group.add(bullet);
 
     // Move bullet forward in the direction the triangle is facing
@@ -98,25 +118,30 @@ const animations = {
     }, 16);
   },
   asteroid: () => {
-    const radius = random(1.0, 0.5, false);
+    const radius = +random(0.5, 0.5, false).toFixed(2);
 
     const ast = new THREE.Mesh(
       new THREE.CircleGeometry(radius, 5.0),
       new THREE.MeshBasicMaterial({ color: 0xffffff }),
     );
 
-    ast.position.set(random(10, 1), random(10, 1), -0.1); // Ensure ast is in back of the triangle
+    const side = random(4);
+
+    const position = generatePosition(side);
+    ast.position.set(position[0], position[1], -0.1);
     group.add(ast);
+
+    const direction = generateDirection(side);
 
     // Move ast forward in the direction the triangle is facing
     const astSpeed = 0.5;
     const astDirection = new THREE.Vector3(
-      random(1, -2),
-      random(1, -2),
+      direction[0],
+      direction[1],
       0
     ).normalize();
 
-    console.log('Asteroid created at', ast.position, 'moving in direction', astDirection);
+    console.info(`Asteroid created with radius ${radius} at position`, ast.position.toArray(), 'moving in direction', astDirection.toArray().map(v => +v.toFixed(2)));
 
     const astInterval = setInterval(() => {
       ast.position.addScaledVector(astDirection, astSpeed);
