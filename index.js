@@ -196,66 +196,86 @@ const getGameURL = (id = peer.id) => {
   return url.toString();
 }
 
-const addScore = (points) => {
-  let scoreEl = document.getElementById('score');
+// // Score
 
-  if (!scoreEl) {
-    scoreEl = document.createElement('div');
-    scoreEl.id = 'score';
-    scoreEl.style.position = 'fixed';
-    scoreEl.style.top = '1rem';
-    scoreEl.style.left = '1rem';
-    scoreEl.style.fontSize = '2rem';
-    scoreEl.style.color = '#ffffff';
-    document.body.appendChild(scoreEl);
-  }
+const createScore = () => {
+  const el = document.createElement('div');
+  el.id = 'score';
+  el.style.position = 'fixed';
+  el.style.top = '1rem';
+  el.style.left = '1rem';
+  el.style.fontSize = '2rem';
+  el.style.color = '#ffffff';
+  document.body.appendChild(el);
+  return el;
+}
 
-  state.score += +points;
+const scoreEl = createScore();
+
+const setScore = (score) => {
+  if (score < 0) score = 0;
+  state.score = +score;
   scoreEl.textContent = `Score: ${state.score}`;
 }
 
-const subtractLife = (points) => {
-  let lifeEl = document.getElementById('life');
+setScore(0);
 
-  if (!lifeEl) {
-    lifeEl = document.createElement('div');
-    lifeEl.id = 'life';
-    lifeEl.style.position = 'fixed';
-    lifeEl.style.top = '3rem';
-    lifeEl.style.left = '1rem';
-    lifeEl.style.fontSize = '2rem';
-    lifeEl.style.color = '#ffffff';
-    document.body.appendChild(lifeEl);
-  }
+const addScore = (score) => setScore(state.score + +score);
 
-  state.lives -= +points;
-  lifeEl.textContent = `Lives: ${state.lives}`;
+// // Lives
 
-  if (state.lives <= 0) {
-    alert('Fucked! Final Score: ' + state.score);
-    state.score = 0;
-    state.lives = 10;
-    addScore(0); // Update score display
-    subtractLife(0); // Update life display
-    centerTriangle();
-    stopAnimations();
-  }
+const createLives = () => {
+  const el = document.createElement('div');
+  el.id = 'life';
+  el.style.position = 'fixed';
+  el.style.top = '3rem';
+  el.style.left = '1rem';
+  el.style.fontSize = '2rem';
+  el.style.color = '#ffffff';
+  document.body.appendChild(el);
+  return el;
 }
 
-const centerTriangle = () => {
+const lifeEl = createLives();
+
+const setLives = (lives) => {
+  state.lives = +lives;
+  lifeEl.textContent = `Lives: ${state.lives}`;
+  if (state.lives <= 0) gameOver();
+}
+
+setLives(10);
+
+const gameOver = () => {
+  alert('Game over! Final Score: ' + state.score);
+  setScore(0);
+  setLives(10);
+  centerPlayer();
+  stopAnimations();
+  removeAllAsteroidsAndBullets();
+}
+
+const subtractLife = (points) => setLives(state.lives - +points);
+
+const centerPlayer = () => {
   player.position.set(0, 0, 0);
   player.rotation.set(0, 0, 0);
+  console.info('Player centered at position ', player.position, ' with rotation ', player.rotation);
 }
 
 const stopAnimations = () => {
-  // This is a simple way to stop animations by clearing intervals and resetting state
   state.shot = false;
   moves.rotation = 0;
   moves.forward = 0;
-  // Remove all asteroids and bullets
+}
+
+const removeAllAsteroidsAndBullets = () => {
   group.children.forEach((child) => {
-    if (child.geometry instanceof THREE.PlaneGeometry || child.geometry instanceof THREE.SphereGeometry) {
+    const isAsteroid = child.geometry instanceof THREE.PlaneGeometry;
+    const isBullet = child.geometry instanceof THREE.SphereGeometry;
+    if (isAsteroid || isBullet) {
       group.remove(child);
+      console.info('Removed', isAsteroid ? 'asteroid' : 'bullet', child);
     }
   });
 }
