@@ -42,8 +42,8 @@ const vertices = new Float32Array([0.0, 1.0, 0.0, -1.0, -1.0, 0.0, 1.0, -1.0, 0.
 geometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
 const colors = new Float32Array([1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0]);
 geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-const triangle = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({ vertexColors: true }));
-group.add(triangle);
+const player = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({ vertexColors: true }));
+group.add(player);
 
 // Animation loop
 const moves = { rotation: 0, forward: 0, }
@@ -52,9 +52,9 @@ const random = (max, min = 0) => Math.floor(max * Math.random()) + min;
 
 const animations = {
   move: () => {
-    triangle.rotation.z += moves.rotation;
-    triangle.position.x += moves.forward * Math.sin(-triangle.rotation.z);
-    triangle.position.y += moves.forward * Math.cos(-triangle.rotation.z);
+    player.rotation.z += moves.rotation;
+    player.position.x += moves.forward * Math.sin(-player.rotation.z);
+    player.position.y += moves.forward * Math.cos(-player.rotation.z);
   },
   bullet: () => {
     if (!state.shot) return;
@@ -64,15 +64,15 @@ const animations = {
       new THREE.MeshBasicMaterial({ color: 0xff9900 })
     );
 
-    const { x, y } = triangle.position.clone();
+    const { x, y } = player.position.clone();
     bullet.position.set(x, y, -0.1); // Ensure bullet is in back of the triangle
     group.add(bullet);
 
     // Move bullet forward in the direction the triangle is facing
     const bulletSpeed = 0.5;
     const bulletDirection = new THREE.Vector3(
-      Math.sin(-triangle.rotation.z),
-      Math.cos(-triangle.rotation.z),
+      Math.sin(-player.rotation.z),
+      Math.cos(-player.rotation.z),
       0
     ).normalize();
 
@@ -119,7 +119,7 @@ const animations = {
     const astInterval = setInterval(() => {
       ast.position.addScaledVector(astDirection, astSpeed);
       // Check for collision with triangle
-      const distance = ast.position.distanceTo(triangle.position);
+      const distance = ast.position.distanceTo(player.position);
       if (distance < 0.5) { // Collision threshold
         group.remove(ast); // Remove asteroid
         addScore(-1.0);
@@ -243,8 +243,8 @@ const subtractLife = (points) => {
 }
 
 const centerTriangle = () => {
-  triangle.position.set(0, 0, 0);
-  triangle.rotation.set(0, 0, 0);
+  player.position.set(0, 0, 0);
+  player.rotation.set(0, 0, 0);
 }
 
 const stopAnimations = () => {
