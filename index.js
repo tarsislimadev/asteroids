@@ -99,7 +99,7 @@ const animations = {
   },
   asteroid: () => {
     const ast = new THREE.Mesh(
-      new THREE.PlaneGeometry(0.5, 0.5),
+      new THREE.PlaneGeometry(1.0, 1.0),
       new THREE.MeshBasicMaterial({ color: 0x999999 }),
     );
 
