@@ -48,7 +48,7 @@ group.add(player);
 // Animation loop
 const moves = { rotation: 0, forward: 0, }
 
-const random = (max, min = 0) => Math.floor(max * Math.random()) + min;
+const random = (max, min = 0, floor = true) => Math[floor ? 'floor' : 'abs'](max * Math.random()) + min;
 
 const animations = {
   move: () => {
@@ -80,9 +80,9 @@ const animations = {
       bullet.position.addScaledVector(bulletDirection, bulletSpeed);
       // Check for collision with asteroids
       group.children.forEach((asteroid) => {
-        if (asteroid.geometry instanceof THREE.PlaneGeometry) {
+        if (asteroid.geometry instanceof THREE.CircleGeometry) {
           const distance = bullet.position.distanceTo(asteroid.position);
-          if (distance < 0.3) { // Collision threshold
+          if (distance < asteroid.geometry.parameters.radius) { // Collision threshold
             group.remove(asteroid); // Remove asteroid
             group.remove(bullet); // Remove bullet
             addScore(+1.0);
@@ -98,9 +98,11 @@ const animations = {
     }, 16);
   },
   asteroid: () => {
+    const radius = random(1.0, 0.5, false);
+
     const ast = new THREE.Mesh(
-      new THREE.PlaneGeometry(1.0, 1.0),
-      new THREE.MeshBasicMaterial({ color: 0x999999 }),
+      new THREE.CircleGeometry(radius, 5.0),
+      new THREE.MeshBasicMaterial({ color: 0xffffff }),
     );
 
     ast.position.set(random(10, 1), random(10, 1), -0.1); // Ensure ast is in back of the triangle
@@ -120,7 +122,7 @@ const animations = {
       ast.position.addScaledVector(astDirection, astSpeed);
       // Check for collision with triangle
       const distance = ast.position.distanceTo(player.position);
-      if (distance < 0.5) { // Collision threshold
+      if (distance < ast.geometry.parameters.radius) { // Collision threshold
         group.remove(ast); // Remove asteroid
         addScore(-1.0);
         subtractLife(1);
@@ -271,7 +273,7 @@ const stopAnimations = () => {
 
 const removeAllAsteroidsAndBullets = () => {
   group.children.forEach((child) => {
-    const isAsteroid = child.geometry instanceof THREE.PlaneGeometry;
+    const isAsteroid = child.geometry instanceof THREE.CircleGeometry;
     const isBullet = child.geometry instanceof THREE.SphereGeometry;
     if (isAsteroid || isBullet) {
       group.remove(child);
