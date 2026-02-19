@@ -23,13 +23,19 @@ export class ScoreModel extends Model {
   }
 
   addPoints(points) {
-    this.points += points;
+    this.points += +points;
     this.update();
   }
 
   subtractLife(points) {
-    this.lives -= points;
+    this.lives -= +points;
     if (this.lives < 0) this.lives = 0;
+    this.update();
+  }
+
+  reset() {
+    this.points = 0;
+    this.lives = 10;
     this.update();
   }
 }
