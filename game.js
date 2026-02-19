@@ -7,6 +7,11 @@ import { AmbientLight } from './lights/ambient.light.js';
 import { WebGLRenderer } from './renderers/webgl.renderer.js';
 import { GameOverEvent } from './events/game.over.event.js';
 import { AsteroidCreatedEvent } from './events/asteroid.create.event.js'
+import { PlayerCollisionEvent } from './events/player.collision.event.js'
+import { BulletCollisionEvent } from './events/bullet.collision.event.js';
+import { AsteroidOutsideEvent } from './events/asteroid.outside.event.js';
+import { BulletOutsideEvent } from './events/bullet.outside.event.js'
+import { PlayerShotEvent } from './events/player.shot.event.js'
 
 export class Game extends EventTarget {
   static MAX_ASTEROIDS = 10;
@@ -32,10 +37,10 @@ export class Game extends EventTarget {
     this.player = new PlayerMesh(this.group);
     this.group.add(this.player);
     this.player.start();
-    this.player.addEventListener('player.shot', (event) => {
+    this.player.addEventListener(PlayerShotEvent.NAME, (event) => {
       const bullet = event.detail.bullet;
       this.group.add(bullet);
-      bullet.addEventListener('bullet.outside', (e) => {
+      bullet.addEventListener(BulletOutsideEvent.NAME, (e) => {
         this.removeBullet(e.detail.bullet);
       });
     });
@@ -66,16 +71,16 @@ export class Game extends EventTarget {
   }
 
   setupAsteroidCollisionListeners() {
-    this.addEventListener('asteroid-created', (event) => {
+    this.addEventListener(AsteroidCreatedEvent.NAME, (event) => {
       const asteroid = event.detail.asteroid;
 
-      asteroid.addEventListener('player.collision', () => {
+      asteroid.addEventListener(PlayerCollisionEvent, () => {
         this.score.subtractLife(1);
         this.removeAsteroid(asteroid);
         this.checkGameOver();
       });
 
-      asteroid.addEventListener('bullet.collision', (e) => {
+      asteroid.addEventListener(BulletCollisionEvent.NAME, (e) => {
         const bullet = e.detail.bullet;
         this.score.addPoints(10);
         this.removeAsteroid(asteroid);
@@ -83,7 +88,7 @@ export class Game extends EventTarget {
         this.checkGameOver();
       });
 
-      asteroid.addEventListener('asteroid.outside', () => {
+      asteroid.addEventListener(AsteroidOutsideEvent.NAME, () => {
         this.removeAsteroid(asteroid);
       });
     });
