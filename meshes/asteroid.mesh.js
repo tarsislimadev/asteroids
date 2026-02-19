@@ -6,6 +6,26 @@ class AsteroidConfig {
   static get speed() { return 0.5 }
   static get radius() { return 0.5 }
   static get color() { return 0xffffff }
+
+  static get far() { return 100 }
+}
+
+class PlayerCollisionEvent extends CustomEvent {
+  constructor({ player, asteroid } = {}) {
+    super('player.collision', { detail: { player, asteroid } })
+  }
+}
+
+class BulletCollisionEvent extends CustomEvent {
+  constructor({ bullet, asteroid } = {}) {
+    super('bullet.collision', { detail: { bullet, asteroid } })
+  }
+}
+
+class AsteroidOutsideEvent extends CustomEvent {
+  constructor({ asteroid } = {}) {
+    super('asteroid.outside', { detail: { asteroid } })
+  }
 }
 
 export class AsteroidMesh extends THREE.Mesh {
@@ -54,21 +74,19 @@ export class AsteroidMesh extends THREE.Mesh {
   }
 
   checkPlayerCollision() {
-    // Check for collision with triangle
     const distance = this.position.distanceTo(this.player.position);
-    if (distance < AsteroidConfig.radius) { // Collision threshold
-      this.dispatchEvent(new CustomEvent('asteroid.collision', { detail: { asteroid: this } }));
+    if (distance < AsteroidConfig.radius) {
+      this.dispatchEvent(new PlayerCollisionEvent({ player: this.player, asteroid: this }));
       this.stop();
     }
   }
 
   checkBulletsCollisions() {
-    // Check for collision with bullets
-    this.group.children.forEach(child => {
+    this.group.children.map(child => {
       if (child instanceof BulletMesh) {
         const distance = this.position.distanceTo(child.position);
-        if (distance < AsteroidConfig.radius) { // Collision threshold
-          this.dispatchEvent(new CustomEvent('asteroid.bullet_collision', { detail: { asteroid: this, bullet: child } }));
+        if (distance < AsteroidConfig.radius) {
+          this.dispatchEvent(new BulletCollisionEvent());
           this.stop();
         }
       }
@@ -81,9 +99,11 @@ export class AsteroidMesh extends THREE.Mesh {
   }
 
   checkSoFar() {
-    // Remove ast if it goes too far
-    if (Math.abs(this.position.x) > 100 || Math.abs(this.position.y) > 100) {
-      this.dispatchEvent(new CustomEvent('asteroid.outside', { detail: { asteroid: this } }));
+    const xFar = Math.abs(this.position.x) > AsteroidConfig.far
+    const yFar = Math.abs(this.position.y) > AsteroidConfig.far
+
+    if (xFar || yFar) {
+      this.dispatchEvent(new AsteroidOutsideEvent({ asteroid: this }));
       this.stop();
     }
   }

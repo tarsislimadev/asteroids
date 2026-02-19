@@ -1,5 +1,7 @@
 export class GameOverEvent extends CustomEvent {
+  static NAME  = 'game.over'
+
   constructor(score) {
-    super('game_over', { detail: { score } });
+    super(GameOverEvent.NAME, { detail: { score } });
   }
 }
