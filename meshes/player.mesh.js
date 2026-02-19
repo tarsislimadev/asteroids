@@ -11,7 +11,7 @@ export class PlayerMesh extends THREE.Mesh {
   backwardMoveInterval = null;
   shotInterval = null;
 
-  constructor({ } = {}) {
+  constructor() {
     const geometry = new THREE.BufferGeometry();
     const vertices = new Float32Array([0.0, 1.0, 0.0, -1.0, -1.0, 0.0, 1.0, -1.0, 0.0]);
     geometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));

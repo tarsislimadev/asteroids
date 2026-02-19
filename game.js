@@ -14,9 +14,9 @@ export class Game extends EventTarget {
   scene = new THREE.Scene();
   group = new THREE.Group();
   renderer = new WebGLRenderer();
-  camera = new PerspectiveCamera({});
-  light = new AmbientLight({});
-  player = new PlayerMesh({});
+  camera = new PerspectiveCamera();
+  light = new AmbientLight();
+  player = new PlayerMesh();
   asteroidInterval = null;
 
   constructor() {
