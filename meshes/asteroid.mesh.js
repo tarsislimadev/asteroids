@@ -1,32 +1,14 @@
 import * as THREE from 'three';
+
 import { BulletMesh } from './bullet.mesh.js';
-import { random } from '../utils.js';
 
-class AsteroidConfig {
-  static get speed() { return 0.5 }
-  static get radius() { return 0.5 }
-  static get color() { return 0xffffff }
+import { random, generateDirection, generatePosition } from '../utils.js';
 
-  static get far() { return 100 }
-}
+import { AsteroidConfig } from '../config/asteroid.config.js'
 
-class PlayerCollisionEvent extends CustomEvent {
-  constructor({ player, asteroid } = {}) {
-    super('player.collision', { detail: { player, asteroid } })
-  }
-}
-
-class BulletCollisionEvent extends CustomEvent {
-  constructor({ bullet, asteroid } = {}) {
-    super('bullet.collision', { detail: { bullet, asteroid } })
-  }
-}
-
-class AsteroidOutsideEvent extends CustomEvent {
-  constructor({ asteroid } = {}) {
-    super('asteroid.outside', { detail: { asteroid } })
-  }
-}
+import { PlayerCollisionEvent } from '../events/player.collision.event.js';
+import { BulletCollisionEvent } from '../events/bullet.collision.event.js'
+import { AsteroidOutsideEvent } from '../events/asteroid.outside.event.js'
 
 export class AsteroidMesh extends THREE.Mesh {
   asteroid_direction = new THREE.Vector3();
@@ -47,30 +29,10 @@ export class AsteroidMesh extends THREE.Mesh {
 
     const side = random(4);
 
-    const position = this.generatePosition(side);
+    const position = generatePosition(side);
     this.position.set(position[0], position[1], -0.1);
 
-    this.asteroid_direction.set(...this.generateDirection(side), 0).normalize();
-  }
-
-  generatePosition(side) {
-    switch (side) {
-      case 0: return [random(10, -5), 10]  // Top
-      case 1: return [random(10, -5), -10]  // Bottom
-      case 2: return [10, random(10, -5)]  // Right
-      case 3: return [-10, random(10, -5)]  // Left
-    }
-    return [0, 0]
-  }
-
-  generateDirection(side) {
-    switch (side) {
-      case 0: return [random(2, -1, false), random(-1, -2, false)]  // Top
-      case 1: return [random(2, -1, false), random(1, 2, false)]  // Bottom
-      case 2: return [random(-1, -2, false), random(2, -1, false)]  // Right
-      case 3: return [random(1, 2, false), random(2, -1, false)]  // Left
-    }
-    return [0, 0]
+    this.asteroid_direction.set(...generateDirection(side), 0).normalize();
   }
 
   checkPlayerCollision() {
