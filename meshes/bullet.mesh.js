@@ -1,8 +1,12 @@
 import * as THREE from 'three';
 
+class BulletConfig {
+  static get speed() { return 0.5 }
+}
+
 export class BulletMesh extends THREE.Mesh {
   bullet_direction = new THREE.Vector3();
-  bullet_speed = 0.5;
+  interval_id = null;
 
   constructor({ x, y, z } = {}) {
     super(
@@ -13,20 +17,30 @@ export class BulletMesh extends THREE.Mesh {
     this.position.set(x, y, 0);
 
     this.bullet_direction.set(Math.sin(-z), Math.cos(-z), 0).normalize();
-
-    this.interval_id = setInterval(() => this.updateBullet(), 16);
   }
 
   checkOutside() {
     const outside_x = Math.abs(this.position.x) > 100;
     const outside_y = Math.abs(this.position.y) > 100;
     if (outside_x || outside_y) {
-      this.dispatchEvent(new CustomEvent('bullet.outside', { detail: { bullet: this } }));
+      this.dispatchEvent({ type: 'bullet.outside', detail: { bullet: this } });
+      this.stop();
+    }
+  }
+
+  start() {
+    this.interval_id = setInterval(() => this.updateBullet(), 16);
+  }
+
+  stop() {
+    if (this.interval_id) {
+      clearInterval(this.interval_id);
+      this.interval_id = null;
     }
   }
 
   updateBullet() {
-    this.position.addScaledVector(this.bullet_direction, this.bullet_speed);
+    this.position.addScaledVector(this.bullet_direction, BulletConfig.speed);
     this.checkOutside();
   }
 }

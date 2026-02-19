@@ -5,19 +5,22 @@ export class PlayerMesh extends THREE.Mesh {
   state = { shoot: 0, rotateRight: 0, rotateLeft: 0, moveForward: 0, moveBackward: 0, }
 
   bullets = [];
+  group = null;
 
   rotationInterval = null;
   forwardMoveInterval = null;
   backwardMoveInterval = null;
   shotInterval = null;
 
-  constructor() {
+  constructor(group = null) {
     const geometry = new THREE.BufferGeometry();
     const vertices = new Float32Array([0.0, 1.0, 0.0, -1.0, -1.0, 0.0, 1.0, -1.0, 0.0]);
     geometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
     const colors = new Float32Array([1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0]);
     geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
     super(geometry, new THREE.MeshBasicMaterial({ vertexColors: true }));
+
+    this.group = group;
   }
 
   start() {
@@ -28,6 +31,13 @@ export class PlayerMesh extends THREE.Mesh {
       if (this.state.moveBackward) this.moveBackward()
       if (this.state.shoot) this.shot()
     }, 1e3 / 60);
+  }
+
+  stop() {
+    if (this.interval) {
+      clearInterval(this.interval);
+      this.interval = null;
+    }
   }
 
   startRotateLeft() { this.state.rotateLeft = 1 }
@@ -69,7 +79,6 @@ export class PlayerMesh extends THREE.Mesh {
   shot() {
     const bullet = this.createBullet();
     this.bullets.push(bullet);
-    this.dispatchEvent(new CustomEvent('player.shot', { detail: { bullet } }));
     return bullet;
   }
 
@@ -90,7 +99,10 @@ export class PlayerMesh extends THREE.Mesh {
   }
 
   removeAllBullets() {
-    this.bullets.map((bullet) => this.group.remove(bullet));
+    this.bullets.map((bullet) => {
+      bullet.stop();
+      this.group.remove(bullet);
+    });
     this.bullets = [];
     return this;
   }

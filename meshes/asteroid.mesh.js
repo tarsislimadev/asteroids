@@ -2,25 +2,27 @@ import * as THREE from 'three';
 import { BulletMesh } from './bullet.mesh.js';
 import { random } from '../utils.js';
 
+class AsteroidConfig {
+  static get speed() { return 0.5 }
+  static get radius() { return 0.5 }
+  static get color() { return 0xffffff }
+}
+
 export class AsteroidMesh extends THREE.Mesh {
-  asteroid_speed = 0.5
   asteroid_direction = new THREE.Vector3();
 
-  game_player = null;
+  player = null;
   group = null;
 
   interval_id = null;
 
   constructor({ player = null, group = null } = {}) {
-    const asteroid_radius = 0.5
-    const asteroid_color = 0xffffff
-
     super(
-      new THREE.CircleGeometry(asteroid_radius, 5.0),
-      new THREE.MeshBasicMaterial({ color: asteroid_color })
+      new THREE.CircleGeometry(AsteroidConfig.radius, 5.0),
+      new THREE.MeshBasicMaterial({ color: AsteroidConfig.color })
     );
 
-    this.game_player = player;
+    this.player = player;
     this.group = group;
 
     const side = random(4);
@@ -53,8 +55,8 @@ export class AsteroidMesh extends THREE.Mesh {
 
   checkPlayerCollision() {
     // Check for collision with triangle
-    const distance = this.position.distanceTo(this.game_player.position);
-    if (distance < this.asteroid_radius) { // Collision threshold
+    const distance = this.position.distanceTo(this.player.position);
+    if (distance < AsteroidConfig.radius) { // Collision threshold
       this.dispatchEvent(new CustomEvent('asteroid.collision', { detail: { asteroid: this } }));
       this.stop();
     }
@@ -65,7 +67,7 @@ export class AsteroidMesh extends THREE.Mesh {
     this.group.children.forEach(child => {
       if (child instanceof BulletMesh) {
         const distance = this.position.distanceTo(child.position);
-        if (distance < this.asteroid_radius) { // Collision threshold
+        if (distance < AsteroidConfig.radius) { // Collision threshold
           this.dispatchEvent(new CustomEvent('asteroid.bullet_collision', { detail: { asteroid: this, bullet: child } }));
           this.stop();
         }
@@ -87,8 +89,15 @@ export class AsteroidMesh extends THREE.Mesh {
   }
 
   start() {
-    this.asteroidUpdate()
-    setInterval(() => this.asteroidUpdate(), 500);
+    this.asteroidUpdate();
+    this.interval_id = setInterval(() => this.asteroidUpdate(), 500);
+  }
+
+  stop() {
+    if (this.interval_id) {
+      clearInterval(this.interval_id);
+      this.interval_id = null;
+    }
   }
 
   asteroidUpdate() {
