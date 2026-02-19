@@ -16,23 +16,28 @@ export class Game extends EventTarget {
   renderer = new WebGLRenderer();
   camera = new PerspectiveCamera();
   light = new AmbientLight();
-  player = new PlayerMesh();
+  player = null;
   asteroidInterval = null;
 
   constructor() {
     super();
-    this.scene.add(this.group); // Adds group to scene
-    this.group.add(this.player); // Adds player to group
-    this.group.add(this.light); // Adds light to group
-    this.group.add(this.camera); // Adds camera to group
-    document.body.appendChild(this.score.domElement); // Adds score element to DOM
+    this.scene.add(this.group); 
+    this.group.add(this.light); 
+    this.group.add(this.camera); 
+    document.body.appendChild(this.score.domElement); 
     this.setWindowEvents();
     this.setKeyboardEvents();
-    this.player.start(); // Starts player update loop
+    this.player = new PlayerMesh(this.group); 
+    this.group.add(this.player); 
+    this.player.start(); 
     this.player.addEventListener('player.shot', (event) => {
       const bullet = event.detail.bullet;
       this.group.add(bullet);
+      bullet.addEventListener('bullet.outside', (e) => {
+        this.removeBullet(e.detail.bullet);
+      });
     });
+    this.setupAsteroidCollisionListeners();
   }
 
   setWindowEvents() {
@@ -58,15 +63,59 @@ export class Game extends EventTarget {
     });
   }
 
+  setupAsteroidCollisionListeners() {
+    this.addEventListener('asteroid-created', (event) => {
+      const asteroid = event.detail.asteroid;
+      
+      asteroid.addEventListener('asteroid.collision', () => {
+        this.score.subtractLife(1);
+        this.removeAsteroid(asteroid);
+        this.checkGameOver();
+      });
+      
+      asteroid.addEventListener('asteroid.bullet_collision', (e) => {
+        const bullet = e.detail.bullet;
+        this.score.addPoints(10);
+        this.removeAsteroid(asteroid);
+        this.removeBullet(bullet);
+        this.checkGameOver();
+      });
+      
+      asteroid.addEventListener('asteroid.outside', () => {
+        this.removeAsteroid(asteroid);
+      });
+    });
+  }
+
+  removeAsteroid(asteroid) {
+    asteroid.stop();
+    this.group.remove(asteroid);
+    this.asteroids = this.asteroids.filter(a => a !== asteroid);
+  }
+
+  removeBullet(bullet) {
+    bullet.stop();
+    this.group.remove(bullet);
+    this.player.bullets = this.player.bullets.filter(b => b !== bullet);
+  }
+
+  checkGameOver() {
+    if (this.score.lives <= 0) {
+      this.stop();
+      this.dispatchEvent(new CustomEvent('game_over', { detail: { score: this.score.points } }));
+    }
+  }
+
   start() {
     this.update();
 
     this.asteroidInterval = setInterval(() => {
       if (this.asteroids.length < Game.MAX_ASTEROIDS) {
-        const ast = new AsteroidMesh({ player: this.player, });
+        const ast = new AsteroidMesh({ player: this.player, group: this.group });
         this.asteroids.push(ast);
         this.group.add(ast);
         ast.start();
+        this.dispatchEvent(new CustomEvent('asteroid-created', { detail: { asteroid: ast } }));
       }
     }, 1000);
   }
@@ -80,12 +129,18 @@ export class Game extends EventTarget {
 
   reset() {
     this.score.reset();
-    this.player.resetPosition().resetRotation().removeAllBullets();
+    this.player.stop();
+    this.player.removeAllBullets();
+    this.player.resetPosition().resetRotation();
     this.removeAllAsteroids();
+    this.start();
   }
 
   removeAllAsteroids() {
-    this.asteroids.map((ast) => this.group.remove(ast));
+    this.asteroids.forEach((ast) => {
+      ast.stop();
+      this.group.remove(ast);
+    });
     this.asteroids = [];
   }
 }
