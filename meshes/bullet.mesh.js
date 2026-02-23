@@ -5,28 +5,25 @@ import { BulletOutsideEvent } from '../events/bullet.outside.event.js'
 import { BulletConfig } from '../config/bullet.config.js'
 
 export class BulletMesh extends THREE.Mesh {
-  bullet_direction = new THREE.Vector3();
+  direction = new THREE.Vector3();
   interval_id = null;
 
-  group = null;
-
-  constructor({ x, y, z, group = {} } = {}) {
+  constructor({ x, y, z } = {}) {
     super(
       new THREE.SphereGeometry(0.1, 16, 16),
       new THREE.MeshBasicMaterial({ color: 0xff9900 })
     )
 
-    this.group = group;
     this.position.set(x, y, 0);
-    this.bullet_direction.set(Math.sin(-z), Math.cos(-z), 0).normalize();
+    this.direction.set(Math.sin(-z), Math.cos(-z), 0).normalize();
 
     window.dispatchEvent(new BulletCreatedEvent({ bullet: this }))
   }
 
   checkOutside() {
-    const outside_x = Math.abs(this.position.x) > BulletConfig.far;
-    const outside_y = Math.abs(this.position.y) > BulletConfig.far;
-    if (outside_x || outside_y) {
+    const xFar = Math.abs(this.position.x) > BulletConfig.far;
+    const yFar = Math.abs(this.position.y) > BulletConfig.far;
+    if (xFar || yFar) {
       this.stop();
       window.dispatchEvent(new BulletOutsideEvent({ bullet: this }))
     }
@@ -34,18 +31,15 @@ export class BulletMesh extends THREE.Mesh {
 
   start() {
     this.updateBullet();
-    this.interval_id = setInterval(() => this.updateBullet(), 16);
+    this.interval_id = setInterval(() => this.updateBullet(), 1e3 / 30);
   }
 
   stop() {
-    if (this.interval_id) {
-      clearInterval(this.interval_id);
-      this.interval_id = null;
-    }
+    clearInterval(this.interval_id);
   }
 
   updateBullet() {
-    this.position.addScaledVector(this.bullet_direction, BulletConfig.speed);
+    this.position.addScaledVector(this.direction, BulletConfig.speed);
     this.checkOutside();
   }
 }
