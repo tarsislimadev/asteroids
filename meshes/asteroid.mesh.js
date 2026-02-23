@@ -9,6 +9,7 @@ import { AsteroidConfig } from '../config/asteroid.config.js'
 import { PlayerCollisionEvent } from '../events/player.collision.event.js';
 import { BulletCollisionEvent } from '../events/bullet.collision.event.js'
 import { AsteroidOutsideEvent } from '../events/asteroid.outside.event.js'
+import { AsteroidCreatedEvent } from '../events/asteroid.create.event.js';
 
 export class AsteroidMesh extends THREE.Mesh {
   asteroid_direction = new THREE.Vector3();
@@ -33,6 +34,8 @@ export class AsteroidMesh extends THREE.Mesh {
     this.position.set(position[0], position[1], -0.1);
 
     this.asteroid_direction.set(...generateDirection(side), 0).normalize();
+
+    window.dispatchEvent(new AsteroidCreatedEvent({ asteroid: this }));
   }
 
   checkPlayerCollision() {
