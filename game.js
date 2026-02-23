@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { AsteroidMesh } from './meshes/asteroid.mesh.js';
+import { BulletMesh } from './meshes/bullet.mesh.js';
 import { PlayerMesh } from './meshes/player.mesh.js';
 import { ScoreModel } from './models/score.model.js';
 import { PerspectiveCamera } from './cameras/perspective.camera.js';
@@ -32,21 +33,9 @@ export class Game extends EventTarget {
     this.group.add(this.light);
     this.group.add(this.camera);
     this.group.add(this.player);
+    this.player.start();
     this.setWindowEvents();
     this.setKeyboardEvents();
-    this.startPlayer();
-    this.setupAsteroidCollisionListeners();
-  }
-
-  startPlayer() {
-    this.player.start();
-    window.addEventListener(PlayerShotEvent.NAME, (event) => {
-      const bullet = event.detail.bullet;
-      this.group.add(bullet);
-      window.addEventListener(BulletOutsideEvent.NAME, (e) => {
-        this.removeBullet(e.detail.bullet);
-      });
-    });
   }
 
   setWindowEvents() {
@@ -54,6 +43,36 @@ export class Game extends EventTarget {
       this.camera.aspect = window.innerWidth / window.innerHeight;
       this.camera.updateProjectionMatrix();
       this.renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    window.addEventListener(PlayerShotEvent.NAME, (event) => {
+      this.group.add(event.detail.bullet);
+    });
+
+    window.addEventListener(BulletOutsideEvent.NAME, (event) => {
+      this.removeBullet(event.detail.bullet);
+    });
+
+    window.addEventListener(AsteroidCreatedEvent.NAME, (event) => {
+      this.group.add(event.detail.asteroid);
+    });
+
+    window.addEventListener(PlayerCollisionEvent.NAME, (event) => {
+      this.removeAsteroid(event.detail.asteroid);
+      this.score.subtractLife();
+      this.checkGameOver();
+    });
+
+    window.addEventListener(BulletCollisionEvent.NAME, (event) => {
+      const { asteroid, bullet } = event.detail;
+      this.removeAsteroid(asteroid);
+      this.removeBullet(bullet);
+      this.score.addPoints();
+      this.checkGameOver();
+    });
+
+    window.addEventListener(AsteroidOutsideEvent.NAME, (event) => {
+      this.removeAsteroid(event.detail.asteroid);
     });
   }
 
@@ -72,40 +91,14 @@ export class Game extends EventTarget {
     });
   }
 
-  setupAsteroidCollisionListeners() {
-    window.addEventListener(AsteroidCreatedEvent.NAME, (event) => {
-      const asteroid = event.detail.asteroid;
-
-      window.addEventListener(PlayerCollisionEvent, () => {
-        this.score.subtractLife(1);
-        this.removeAsteroid(asteroid);
-        this.checkGameOver();
-      });
-
-      window.addEventListener(BulletCollisionEvent.NAME, (e) => {
-        const bullet = e.detail.bullet;
-        this.score.addPoints(10);
-        this.removeAsteroid(asteroid);
-        this.removeBullet(bullet);
-        this.checkGameOver();
-      });
-
-      window.addEventListener(AsteroidOutsideEvent.NAME, () => {
-        this.removeAsteroid(asteroid);
-      });
-    });
-  }
-
   removeAsteroid(asteroid) {
     asteroid.stop();
     this.group.remove(asteroid);
-    this.asteroids = this.asteroids.filter(a => a !== asteroid);
   }
 
   removeBullet(bullet) {
     bullet.stop();
     this.group.remove(bullet);
-    this.player.bullets = this.player.bullets.filter(b => b !== bullet);
   }
 
   checkGameOver() {
@@ -121,12 +114,9 @@ export class Game extends EventTarget {
   }
 
   addAsteroid() {
-    if (this.asteroids.length < Game.MAX_ASTEROIDS) {
-      const ast = new AsteroidMesh({ player: this.player, group: this.group });
-      this.asteroids.push(ast);
-      this.group.add(ast);
-      ast.start();
-      window.dispatchEvent(new AsteroidCreatedEvent(ast));
+    if (this.getAsteroids().length < Game.MAX_ASTEROIDS) {
+      const asteroid = new AsteroidMesh({ player: this.player, group: this.group });
+      asteroid.start();
     }
   }
 
@@ -140,17 +130,31 @@ export class Game extends EventTarget {
   reset() {
     this.score.reset();
     this.player.stop();
-    this.player.removeAllBullets();
     this.player.resetPosition().resetRotation();
+    this.removeAllBullets();
     this.removeAllAsteroids();
     this.start();
   }
 
+  getAsteroids() {
+    return this.group.children.filter((asteroid) => asteroid instanceof AsteroidMesh);
+  }
+
+  getBullets() {
+    return this.group.children.filter((bullet) => bullet instanceof BulletMesh);
+  }
+
   removeAllAsteroids() {
-    this.asteroids.forEach((ast) => {
-      ast.stop();
-      this.group.remove(ast);
+    this.getAsteroids().map((asteroid) => {
+      asteroid.stop();
+      this.group.remove(asteroid);
     });
-    this.asteroids = [];
+  }
+
+  removeAllBullets() {
+    this.getBullets().map((bullet) => {
+      bullet.stop();
+      this.group.remove(bullet);
+    });
   }
 }
