@@ -18,8 +18,12 @@ export class ScoreModel extends Model {
     this.update();
   }
 
+  getScoreText() {
+    return `Score: ${this.points} | Lives: ${this.lives}`
+  }
+
   update() {
-    this.domElement.textContent = `Score: ${this.points} | Lives: ${this.lives}`;
+    this.domElement.textContent = this.getScoreText();
   }
 
   addPoints(points) {
@@ -37,5 +41,9 @@ export class ScoreModel extends Model {
     this.points = 0;
     this.lives = 10;
     this.update();
+  }
+
+  toString() {
+    return this.getScoreText()
   }
 }
