@@ -1,5 +1,7 @@
 export class AsteroidCreatedEvent extends CustomEvent {
-  constructor(asteroid) {
-    super('asteroid-created', { detail: { asteroid } })
+  static NAME = 'asteroid-created'
+
+  constructor({ asteroid } = {}) {
+    super(AsteroidCreatedEvent.NAME, { detail: { asteroid } })
   }
 }
