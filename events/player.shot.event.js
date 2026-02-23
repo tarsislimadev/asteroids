@@ -1,7 +1,7 @@
 export class PlayerShotEvent extends CustomEvent {
   static NAME = 'player.shot'
 
-  constructor({ player } = {}) {
-    super(PlayerShotEvent.NAME, { detail: { player } })
+  constructor({ player, bullet } = {}) {
+    super(PlayerShotEvent.NAME, { detail: { player, bullet } })
   }
 }

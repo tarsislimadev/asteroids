@@ -23,7 +23,7 @@ export class Game extends EventTarget {
   renderer = new WebGLRenderer();
   camera = new PerspectiveCamera();
   light = new AmbientLight();
-  player = null;
+  player = new PlayerMesh(this.group);
   asteroidInterval = null;
 
   constructor() {
@@ -31,19 +31,22 @@ export class Game extends EventTarget {
     this.scene.add(this.group);
     this.group.add(this.light);
     this.group.add(this.camera);
+    this.group.add(this.player);
     this.setWindowEvents();
     this.setKeyboardEvents();
-    this.player = new PlayerMesh(this.group);
-    this.group.add(this.player);
+    this.startPlayer();
+    this.setupAsteroidCollisionListeners();
+  }
+
+  startPlayer() {
     this.player.start();
-    this.player.addEventListener(PlayerShotEvent.NAME, (event) => {
+    window.addEventListener(PlayerShotEvent.NAME, (event) => {
       const bullet = event.detail.bullet;
       this.group.add(bullet);
-      bullet.addEventListener(BulletOutsideEvent.NAME, (e) => {
+      window.addEventListener(BulletOutsideEvent.NAME, (e) => {
         this.removeBullet(e.detail.bullet);
       });
     });
-    this.setupAsteroidCollisionListeners();
   }
 
   setWindowEvents() {
@@ -70,16 +73,16 @@ export class Game extends EventTarget {
   }
 
   setupAsteroidCollisionListeners() {
-    this.addEventListener(AsteroidCreatedEvent.NAME, (event) => {
+    window.addEventListener(AsteroidCreatedEvent.NAME, (event) => {
       const asteroid = event.detail.asteroid;
 
-      asteroid.addEventListener(PlayerCollisionEvent, () => {
+      window.addEventListener(PlayerCollisionEvent, () => {
         this.score.subtractLife(1);
         this.removeAsteroid(asteroid);
         this.checkGameOver();
       });
 
-      asteroid.addEventListener(BulletCollisionEvent.NAME, (e) => {
+      window.addEventListener(BulletCollisionEvent.NAME, (e) => {
         const bullet = e.detail.bullet;
         this.score.addPoints(10);
         this.removeAsteroid(asteroid);
@@ -87,7 +90,7 @@ export class Game extends EventTarget {
         this.checkGameOver();
       });
 
-      asteroid.addEventListener(AsteroidOutsideEvent.NAME, () => {
+      window.addEventListener(AsteroidOutsideEvent.NAME, () => {
         this.removeAsteroid(asteroid);
       });
     });
@@ -108,7 +111,7 @@ export class Game extends EventTarget {
   checkGameOver() {
     if (this.score.lives <= 0) {
       this.stop();
-      this.dispatchEvent(new GameOverEvent(this.score.points));
+      window.dispatchEvent(new GameOverEvent(this.score.points));
     }
   }
 
@@ -123,7 +126,7 @@ export class Game extends EventTarget {
       this.asteroids.push(ast);
       this.group.add(ast);
       ast.start();
-      this.dispatchEvent(new AsteroidCreatedEvent(ast));
+      window.dispatchEvent(new AsteroidCreatedEvent(ast));
     }
   }
 

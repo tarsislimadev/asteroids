@@ -38,17 +38,17 @@ export class AsteroidMesh extends THREE.Mesh {
   checkPlayerCollision() {
     const distance = this.position.distanceTo(this.player.position);
     if (distance < AsteroidConfig.radius) {
-      this.dispatchEvent(new PlayerCollisionEvent({ player: this.player, asteroid: this }));
+      window.dispatchEvent(new PlayerCollisionEvent({ player: this.player, asteroid: this }));
       this.stop();
     }
   }
 
   checkBulletsCollisions() {
-    this.group.children.map(child => {
-      if (child instanceof BulletMesh) {
-        const distance = this.position.distanceTo(child.position);
+    this.group.children.map(bullet => {
+      if (bullet instanceof BulletMesh) {
+        const distance = this.position.distanceTo(bullet.position);
         if (distance < AsteroidConfig.radius) {
-          this.dispatchEvent(new BulletCollisionEvent());
+          window.dispatchEvent(new BulletCollisionEvent({ bullet, asteroid: this }));
           this.stop();
         }
       }
@@ -65,7 +65,7 @@ export class AsteroidMesh extends THREE.Mesh {
     const yFar = Math.abs(this.position.y) > AsteroidConfig.far
 
     if (xFar || yFar) {
-      this.dispatchEvent(new AsteroidOutsideEvent({ asteroid: this }));
+      window.dispatchEvent(new AsteroidOutsideEvent({ asteroid: this }));
       this.stop();
     }
   }
