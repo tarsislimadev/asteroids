@@ -4,12 +4,12 @@ import { AsteroidConfig } from '../config/asteroid.config.js'
 import { PlayerCollisionEvent } from '../events/player.collision.event.js';
 import { BulletCollisionEvent } from '../events/bullet.collision.event.js'
 import { AsteroidOutsideEvent } from '../events/asteroid.outside.event.js'
-import { AsteroidCreatedEvent } from '../events/asteroid.create.event.js';
+import { AsteroidCreatedEvent } from '../events/asteroid.created.event.js';
 
 export class AsteroidMesh extends THREE.Mesh {
   static SPEED = 0.5
 
-  asteroid_direction = new THREE.Vector3();
+  direction = new THREE.Vector3();
 
   getters = {
     getPlayer: null,
@@ -29,10 +29,9 @@ export class AsteroidMesh extends THREE.Mesh {
 
     const side = random(4);
 
-    const position = generatePosition(side);
-    this.position.set(position[0], position[1], -0.1);
+    this.position.set(...generatePosition(side), -0.1);
 
-    this.asteroid_direction.set(...generateDirection(side), 0).normalize();
+    this.direction.set(...generateDirection(side), 0).normalize();
 
     window.dispatchEvent(new AsteroidCreatedEvent({ asteroid: this }));
   }
@@ -55,15 +54,9 @@ export class AsteroidMesh extends THREE.Mesh {
     });
   }
 
-  checkCollisions() {
-    this.checkPlayerCollision()
-    this.checkBulletsCollisions()
-  }
-
-  checkSoFar() {
+  checkOutside() {
     const xFar = Math.abs(this.position.x) > AsteroidConfig.far
     const yFar = Math.abs(this.position.y) > AsteroidConfig.far
-
     if (xFar || yFar) {
       window.dispatchEvent(new AsteroidOutsideEvent({ asteroid: this }));
       this.stop();
@@ -80,8 +73,9 @@ export class AsteroidMesh extends THREE.Mesh {
   }
 
   asteroidUpdate() {
-    this.position.addScaledVector(this.asteroid_direction, AsteroidMesh.SPEED);
-    this.checkCollisions();
-    this.checkSoFar();
+    this.position.addScaledVector(this.direction, AsteroidMesh.SPEED);
+    this.checkPlayerCollision();
+    this.checkBulletsCollisions();
+    this.checkOutside();
   }
 }
