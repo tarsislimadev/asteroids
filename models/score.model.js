@@ -26,12 +26,12 @@ export class ScoreModel extends Model {
     this.domElement.textContent = this.getScoreText();
   }
 
-  addPoints(points) {
+  addPoints(points = 1) {
     this.points += +points;
     this.update();
   }
 
-  subtractLife(points) {
+  subtractLife(points = 1) {
     this.lives -= +points;
     if (this.lives < 0) this.lives = 0;
     this.update();
