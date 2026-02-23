@@ -5,7 +5,6 @@ import { PlayerShotEvent } from '../events/player.shot.event.js';
 export class PlayerMesh extends THREE.Mesh {
   state = { shoot: 0, rotateRight: 0, rotateLeft: 0, moveForward: 0, moveBackward: 0, }
 
-  bullets = [];
   group = null;
 
   rotationInterval = null;
@@ -82,7 +81,6 @@ export class PlayerMesh extends THREE.Mesh {
 
   shot() {
     const bullet = this.createBullet();
-    this.bullets.push(bullet);
     return bullet;
   }
 
@@ -103,14 +101,5 @@ export class PlayerMesh extends THREE.Mesh {
     bullet.start();
     window.dispatchEvent(new PlayerShotEvent({ player: this, bullet }));
     return bullet;
-  }
-
-  removeAllBullets() {
-    this.bullets.map((bullet) => {
-      bullet.stop();
-      this.group.remove(bullet);
-    });
-    this.bullets = [];
-    return this;
   }
 }
