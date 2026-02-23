@@ -31,7 +31,6 @@ export class Game extends EventTarget {
     this.scene.add(this.group);
     this.group.add(this.light);
     this.group.add(this.camera);
-    document.body.appendChild(this.score.domElement);
     this.setWindowEvents();
     this.setKeyboardEvents();
     this.player = new PlayerMesh(this.group);
@@ -115,16 +114,17 @@ export class Game extends EventTarget {
 
   start() {
     this.update();
+    this.asteroidInterval = setInterval(() => this.addAsteroid(), 1000);
+  }
 
-    this.asteroidInterval = setInterval(() => {
-      if (this.asteroids.length < Game.MAX_ASTEROIDS) {
-        const ast = new AsteroidMesh({ player: this.player, group: this.group });
-        this.asteroids.push(ast);
-        this.group.add(ast);
-        ast.start();
-        this.dispatchEvent(new AsteroidCreatedEvent(ast));
-      }
-    }, 1000);
+  addAsteroid() {
+    if (this.asteroids.length < Game.MAX_ASTEROIDS) {
+      const ast = new AsteroidMesh({ player: this.player, group: this.group });
+      this.asteroids.push(ast);
+      this.group.add(ast);
+      ast.start();
+      this.dispatchEvent(new AsteroidCreatedEvent(ast));
+    }
   }
 
   stop() { clearInterval(this.asteroidInterval); }
