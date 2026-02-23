@@ -1,32 +1,31 @@
 import * as THREE from 'three';
-
-import { BulletMesh } from './bullet.mesh.js';
-
 import { random, generateDirection, generatePosition } from '../utils.js';
-
 import { AsteroidConfig } from '../config/asteroid.config.js'
-
 import { PlayerCollisionEvent } from '../events/player.collision.event.js';
 import { BulletCollisionEvent } from '../events/bullet.collision.event.js'
 import { AsteroidOutsideEvent } from '../events/asteroid.outside.event.js'
 import { AsteroidCreatedEvent } from '../events/asteroid.create.event.js';
 
 export class AsteroidMesh extends THREE.Mesh {
+  static SPEED = 0.5
+
   asteroid_direction = new THREE.Vector3();
 
-  player = null;
-  group = null;
+  getters = {
+    getPlayer: null,
+    getBullets: null,
+  }
 
   interval_id = null;
 
-  constructor({ player = null, group = null } = {}) {
+  constructor({ getPlayer, getBullets } = {}) {
     super(
       new THREE.CircleGeometry(AsteroidConfig.radius, 5.0),
       new THREE.MeshBasicMaterial({ color: AsteroidConfig.color })
     );
 
-    this.player = player;
-    this.group = group;
+    this.getters.getPlayer = getPlayer;
+    this.getters.getBullets = getBullets;
 
     const side = random(4);
 
@@ -39,21 +38,19 @@ export class AsteroidMesh extends THREE.Mesh {
   }
 
   checkPlayerCollision() {
-    const distance = this.position.distanceTo(this.player.position);
+    const distance = this.position.distanceTo(this.getters.getPlayer().position);
     if (distance < AsteroidConfig.radius) {
-      window.dispatchEvent(new PlayerCollisionEvent({ player: this.player, asteroid: this }));
       this.stop();
+      window.dispatchEvent(new PlayerCollisionEvent({ asteroid: this }));
     }
   }
 
   checkBulletsCollisions() {
-    this.group.children.map(bullet => {
-      if (bullet instanceof BulletMesh) {
-        const distance = this.position.distanceTo(bullet.position);
-        if (distance < AsteroidConfig.radius) {
-          window.dispatchEvent(new BulletCollisionEvent({ bullet, asteroid: this }));
-          this.stop();
-        }
+    this.getters.getBullets().map(bullet => {
+      const distance = this.position.distanceTo(bullet.position);
+      if (distance < AsteroidConfig.radius) {
+        this.stop();
+        window.dispatchEvent(new BulletCollisionEvent({ bullet, asteroid: this }));
       }
     });
   }
@@ -79,14 +76,11 @@ export class AsteroidMesh extends THREE.Mesh {
   }
 
   stop() {
-    if (this.interval_id) {
-      clearInterval(this.interval_id);
-      this.interval_id = null;
-    }
+    clearInterval(this.interval_id);
   }
 
   asteroidUpdate() {
-    this.position.addScaledVector(this.asteroid_direction, this.asteroid_speed);
+    this.position.addScaledVector(this.asteroid_direction, AsteroidMesh.SPEED);
     this.checkCollisions();
     this.checkSoFar();
   }

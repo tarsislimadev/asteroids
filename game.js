@@ -115,7 +115,10 @@ export class Game extends EventTarget {
 
   addAsteroid() {
     if (this.getAsteroids().length < Game.MAX_ASTEROIDS) {
-      const asteroid = new AsteroidMesh({ player: this.player, group: this.group });
+      const asteroid = new AsteroidMesh({
+        getPlayer: () => this.player,
+        getBullets: () => this.getBullets(),
+      });
       asteroid.start();
     }
   }
