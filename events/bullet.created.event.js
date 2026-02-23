@@ -1,4 +1,4 @@
-export class BulletCreatedEvent extends Event {
+export class BulletCreatedEvent extends CustomEvent {
   static NAME = 'bullet.created'
 
   constructor({ bullet } = {}) {
