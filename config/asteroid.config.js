@@ -3,5 +3,5 @@ export class AsteroidConfig {
   static get radius() { return 0.5 }
   static get color() { return 0xffffff }
 
-  static get far() { return 100 }
+  static get far() { return 30 }
 }
