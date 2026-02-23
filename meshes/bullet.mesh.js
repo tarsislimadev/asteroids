@@ -1,4 +1,6 @@
 import * as THREE from 'three';
+import { BulletCreatedEvent } from '../events/bullet.created.event.js'
+import { BulletOutsideEvent } from '../events/bullet.outside.event.js'
 
 class BulletConfig {
   static get speed() { return 0.5 }
@@ -19,14 +21,16 @@ export class BulletMesh extends THREE.Mesh {
     this.group = group;
     this.position.set(x, y, 0);
     this.bullet_direction.set(Math.sin(-z), Math.cos(-z), 0).normalize();
+
+    window.dispatchEvent(new BulletCreatedEvent({ bullet: this }))
   }
 
   checkOutside() {
     const outside_x = Math.abs(this.position.x) > 100;
     const outside_y = Math.abs(this.position.y) > 100;
     if (outside_x || outside_y) {
-      window.dispatchEvent({ type: 'bullet.outside', detail: { bullet: this } });
       this.stop();
+      window.dispatchEvent(new BulletOutsideEvent({ bullet: this }))
     }
   }
 
