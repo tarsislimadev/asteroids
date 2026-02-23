@@ -7,7 +7,7 @@ import { PerspectiveCamera } from './cameras/perspective.camera.js';
 import { AmbientLight } from './lights/ambient.light.js';
 import { WebGLRenderer } from './renderers/webgl.renderer.js';
 import { GameOverEvent } from './events/game.over.event.js';
-import { AsteroidCreatedEvent } from './events/asteroid.create.event.js'
+import { AsteroidCreatedEvent } from './events/asteroid.created.event.js'
 import { PlayerCollisionEvent } from './events/player.collision.event.js'
 import { BulletCollisionEvent } from './events/bullet.collision.event.js';
 import { AsteroidOutsideEvent } from './events/asteroid.outside.event.js';
@@ -24,7 +24,7 @@ export class Game extends EventTarget {
   renderer = new WebGLRenderer();
   camera = new PerspectiveCamera();
   light = new AmbientLight();
-  player = new PlayerMesh(this.group);
+  player = new PlayerMesh({ createBullet: () => this.addBullet() });
   asteroidInterval = null;
 
   constructor() {
@@ -123,11 +123,21 @@ export class Game extends EventTarget {
     }
   }
 
+  addBullet() {
+    const bullet = new BulletMesh({
+      x: this.player.position.x,
+      y: this.player.position.y,
+      z: this.player.rotation.z
+    });
+    bullet.start();
+    window.dispatchEvent(new PlayerShotEvent({ player: this.player, bullet }));
+  }
+
   stop() { clearInterval(this.asteroidInterval); }
 
   update() {
-    requestAnimationFrame(() => this.update());
     this.renderer.render(this.scene, this.camera);
+    requestAnimationFrame(() => this.update());
   }
 
   reset() {

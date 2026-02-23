@@ -1,18 +1,16 @@
 import * as THREE from 'three';
-import { BulletMesh } from './bullet.mesh.js';
-import { PlayerShotEvent } from '../events/player.shot.event.js';
 
 export class PlayerMesh extends THREE.Mesh {
   state = { shoot: 0, rotateRight: 0, rotateLeft: 0, moveForward: 0, moveBackward: 0, }
 
-  group = null;
+  createBullet = null;
 
   rotationInterval = null;
   forwardMoveInterval = null;
   backwardMoveInterval = null;
   shotInterval = null;
 
-  constructor(group = null) {
+  constructor({ createBullet } = {}) {
     const geometry = new THREE.BufferGeometry();
     const vertices = new Float32Array([0.0, 1.0, 0.0, -1.0, -1.0, 0.0, 1.0, -1.0, 0.0]);
     geometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
@@ -20,7 +18,7 @@ export class PlayerMesh extends THREE.Mesh {
     geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
     super(geometry, new THREE.MeshBasicMaterial({ vertexColors: true }));
 
-    this.group = group;
+    this.createBullet = createBullet;
   }
 
   start() {
@@ -33,7 +31,7 @@ export class PlayerMesh extends THREE.Mesh {
     if (this.state.rotateRight) this.rotateRight();
     if (this.state.moveForward) this.moveForward();
     if (this.state.moveBackward) this.moveBackward();
-    if (this.state.shoot) this.shot();
+    if (this.state.shoot) this.createBullet?.();
   }
 
   stop() {
@@ -79,11 +77,6 @@ export class PlayerMesh extends THREE.Mesh {
 
   stopShot() { this.state.shoot = 0; }
 
-  shot() {
-    const bullet = this.createBullet();
-    return bullet;
-  }
-
   resetPosition() {
     this.position.set(0, 0, 0);
     return this;
@@ -92,14 +85,5 @@ export class PlayerMesh extends THREE.Mesh {
   resetRotation() {
     this.rotation.set(0, 0, 0);
     return this;
-  }
-
-  createBullet() {
-    const { x, y } = this.position;
-    const { z } = this.rotation;
-    const bullet = new BulletMesh({ x, y, z, group: this.group });
-    bullet.start();
-    window.dispatchEvent(new PlayerShotEvent({ player: this, bullet }));
-    return bullet;
   }
 }
