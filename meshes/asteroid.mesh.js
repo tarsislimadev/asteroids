@@ -1,9 +1,9 @@
 import * as THREE from 'three';
 import { random, generateDirection, generatePosition } from '../utils.js';
-import { AsteroidConfig } from '../config/asteroid.config.js'
-import { PlayerCollisionEvent } from '../events/player.collision.event.js';
-import { BulletCollisionEvent } from '../events/bullet.collision.event.js'
-import { AsteroidOutsideEvent } from '../events/asteroid.outside.event.js'
+import { AsteroidConfig } from '../config/asteroid.config.js';
+import { PlayerCollisionEvent } from '../events/player.asteroid.collision.event.js';
+import { AsteroidBulletCollisionEvent } from '../events/asteroid.bullet.collision.event.js';
+import { AsteroidOutsideEvent } from '../events/asteroid.outside.event.js';
 import { AsteroidCreatedEvent } from '../events/asteroid.created.event.js';
 
 export class AsteroidMesh extends THREE.Mesh {
@@ -49,7 +49,7 @@ export class AsteroidMesh extends THREE.Mesh {
       const distance = this.position.distanceTo(bullet.position);
       if (distance < AsteroidConfig.radius) {
         this.stop();
-        window.dispatchEvent(new BulletCollisionEvent({ bullet, asteroid: this }));
+        window.dispatchEvent(new AsteroidBulletCollisionEvent({ bullet, asteroid: this }));
       }
     });
   }

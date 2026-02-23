@@ -8,8 +8,8 @@ import { AmbientLight } from './lights/ambient.light.js';
 import { WebGLRenderer } from './renderers/webgl.renderer.js';
 import { GameOverEvent } from './events/game.over.event.js';
 import { AsteroidCreatedEvent } from './events/asteroid.created.event.js'
-import { PlayerCollisionEvent } from './events/player.collision.event.js'
-import { BulletCollisionEvent } from './events/bullet.collision.event.js';
+import { PlayerCollisionEvent } from './events/player.asteroid.collision.event.js'
+import { AsteroidBulletCollisionEvent } from './events/asteroid.bullet.collision.event.js';
 import { AsteroidOutsideEvent } from './events/asteroid.outside.event.js';
 import { BulletOutsideEvent } from './events/bullet.outside.event.js'
 import { PlayerShotEvent } from './events/player.shot.event.js'
@@ -63,7 +63,7 @@ export class Game extends EventTarget {
       this.checkGameOver();
     });
 
-    window.addEventListener(BulletCollisionEvent.NAME, (event) => {
+    window.addEventListener(AsteroidBulletCollisionEvent.NAME, (event) => {
       const { asteroid, bullet } = event.detail;
       this.removeAsteroid(asteroid);
       this.removeBullet(bullet);
@@ -127,7 +127,8 @@ export class Game extends EventTarget {
     const bullet = new BulletMesh({
       x: this.player.position.x,
       y: this.player.position.y,
-      z: this.player.rotation.z
+      z: this.player.rotation.z,
+      getAsteroids: () => this.getAsteroids()
     });
     bullet.start();
     window.dispatchEvent(new PlayerShotEvent({ player: this.player, bullet }));
