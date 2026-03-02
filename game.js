@@ -13,12 +13,13 @@ import { AsteroidBulletCollisionEvent } from './events/asteroid.bullet.collision
 import { AsteroidOutsideEvent } from './events/asteroid.outside.event.js';
 import { BulletOutsideEvent } from './events/bullet.outside.event.js'
 import { PlayerShotEvent } from './events/player.shot.event.js'
+import { GameWinEvent } from './events/game.win.event.js';
 
 export class Game extends EventTarget {
-  static MAX_ASTEROIDS = 10;
+  static MAX_ASTEROIDS = 100;
 
   score = new ScoreModel();
-  asteroids = []
+  asteroids = [];
   scene = new THREE.Scene();
   group = new THREE.Group();
   renderer = new WebGLRenderer();
@@ -44,6 +45,16 @@ export class Game extends EventTarget {
       this.camera.updateProjectionMatrix();
       this.renderer.setSize(window.innerWidth, window.innerHeight);
     });
+
+    window.addEventListener(GameOverEvent.NAME, () => {
+      alert('Game over! Final Score: ' + this.score.toString());
+      this.reset();
+      this.addScore(this.score.points)
+    })
+
+    window.addEventListener(GameWinEvent.NAME, () => {
+      this.addScore(this.score.points * (1 + this.score.lives))
+    })
 
     window.addEventListener(PlayerShotEvent.NAME, (event) => {
       this.group.add(event.detail.bullet);
@@ -102,15 +113,21 @@ export class Game extends EventTarget {
   }
 
   checkGameOver() {
-    if (this.score.lives <= 0) {
-      this.stop();
-      window.dispatchEvent(new GameOverEvent(this.score.points));
+    switch (true) {
+      case this.score.lives <= 0: {
+        this.stop();
+        window.dispatchEvent(new GameOverEvent(this.score.points));
+      } break;
+      case this.score.points >= 1e4: {
+        this.stop();
+        window.dispatchEvent(new GameWinEvent(this.score.points));
+      } break;
     }
   }
 
   start() {
     this.update();
-    this.asteroidInterval = setInterval(() => this.addAsteroid(), 1000);
+    this.asteroidInterval = setInterval(() => this.addAsteroid(), 100);
   }
 
   addAsteroid() {
