@@ -11,9 +11,8 @@ export class ScoreModel extends Model {
     this.domElement.style.position = 'fixed';
     this.domElement.style.top = '1rem';
     this.domElement.style.left = '1rem';
-    this.domElement.style.fontSize = '2rem';
+    this.domElement.style.fontSize = '1rem';
     this.domElement.style.color = '#ffffff';
-    document.body.appendChild(this.domElement);
     this.init();
     this.update();
   }

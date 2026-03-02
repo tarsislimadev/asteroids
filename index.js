@@ -12,4 +12,6 @@ window.addEventListener(GameOverEvent.NAME, () => {
   game.reset();
 })
 
-document.getElementById('app').appendChild(game.score.domElement);
+const app = document.getElementById('app');
+app.appendChild(game.renderer.domElement);
+app.appendChild(game.score.domElement);
