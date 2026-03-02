@@ -29,13 +29,14 @@ export class Game extends EventTarget {
   player = new PlayerMesh({ createBullet: () => this.addBullet() });
   asteroidInterval = null;
 
-  constructor() {
+  constructor(width, height) {
     super();
     this.scene.add(this.group);
     this.group.add(this.light);
     this.group.add(this.camera);
     this.group.add(this.player);
     this.player.start();
+    this.renderer.setSize(width, height);
     this.setWindowEvents();
     this.setKeyboardEvents();
   }
