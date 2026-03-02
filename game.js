@@ -17,6 +17,7 @@ import { GameWinEvent } from './events/game.win.event.js';
 
 export class Game extends EventTarget {
   static MAX_ASTEROIDS = 100;
+  static MAX_SCORE_POINTS = 100;
 
   score = new ScoreModel();
   asteroids = [];
@@ -47,13 +48,13 @@ export class Game extends EventTarget {
     });
 
     window.addEventListener(GameOverEvent.NAME, () => {
-      alert('Game over! Final Score: ' + this.score.toString());
+      alert('Game over! ' + this.score.toString());
       this.reset();
-      this.addScore(this.score.points)
     })
 
     window.addEventListener(GameWinEvent.NAME, () => {
-      this.addScore(this.score.points * (1 + this.score.lives))
+      alert('You won! ' + this.score.toString());
+      this.reset();
     })
 
     window.addEventListener(PlayerShotEvent.NAME, (event) => {
@@ -114,13 +115,13 @@ export class Game extends EventTarget {
 
   checkGameOver() {
     switch (true) {
-      case this.score.lives <= 0: {
+      case this.score.getLives() <= 0: {
         this.stop();
-        window.dispatchEvent(new GameOverEvent(this.score.points));
+        window.dispatchEvent(new GameOverEvent(this.score.getPoints()));
       } break;
-      case this.score.points >= 1e4: {
+      case this.score.getPoints() >= Game.MAX_SCORE_POINTS: {
         this.stop();
-        window.dispatchEvent(new GameWinEvent(this.score.points));
+        window.dispatchEvent(new GameWinEvent(this.score.getPoints()));
       } break;
     }
   }
