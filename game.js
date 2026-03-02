@@ -92,6 +92,7 @@ export class Game extends EventTarget {
   setKeyboardEvents() {
     ['keydown', 'keyup'].map(event_name => {
       window.addEventListener(event_name, (event) => {
+        event.preventDefault();
         const isKeyDown = event_name === 'keydown' ? 1 : 0;
         switch (event.key) {
           case 'ArrowLeft': isKeyDown ? this.player.startRotateLeft() : this.player.stopRotateLeft(); break;
