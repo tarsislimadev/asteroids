@@ -2,12 +2,12 @@
 
 ## How may AIs learn using neural networks?
 
-Number of middle layers: 3
+Number of middle layers: 5
 
-Neurons on first middle layer: 10
+Neurons on each middle layer: 10
 
-Neurons on second middle layer: 8
+Neuron: INs * random() + 0 = OUT
 
-Neurons on last middle layer: 6
+## results of a neural network
 
-Neuron: IN * random() + 0 = OUT
+results = generation[].item[].layer[].neuron[].weight
