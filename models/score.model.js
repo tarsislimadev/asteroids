@@ -1,10 +1,9 @@
 import { Model } from './model.js'
 
 export class ScoreModel extends Model {
-  points = 0
-  lives = 10
-
   domElement = document.createElement('div');
+  points = -1
+  lives = -1
 
   constructor() {
     super();
@@ -15,11 +14,28 @@ export class ScoreModel extends Model {
     this.domElement.style.fontSize = '2rem';
     this.domElement.style.color = '#ffffff';
     document.body.appendChild(this.domElement);
+    this.init();
     this.update();
   }
 
+  getPoints() {
+    return this.points
+  }
+
+  setPoints(points) {
+    this.points = points
+  }
+
+  getLives() {
+    return this.lives
+  }
+
+  setLives(lives) {
+    this.lives = lives
+  }
+
   getScoreText() {
-    return `Score: ${this.points} | Lives: ${this.lives}`
+    return `Score: ${this.getPoints()} | Lives: ${this.getLives()}`
   }
 
   update() {
@@ -27,19 +43,23 @@ export class ScoreModel extends Model {
   }
 
   addPoints(points = 1) {
-    this.points += +points;
+    this.setPoints(this.getPoints() + +points);
     this.update();
   }
 
   subtractLife(points = 1) {
-    this.lives -= +points;
-    if (this.lives < 0) this.lives = 0;
+    this.setLives(this.getLives() - +points);
+    if (this.getLives() < 0) this.setLives(0);
     this.update();
   }
 
+  init() {
+    this.setPoints(0);
+    this.setLives(10);
+  }
+
   reset() {
-    this.points = 0;
-    this.lives = 10;
+    this.init();
     this.update();
   }
 
