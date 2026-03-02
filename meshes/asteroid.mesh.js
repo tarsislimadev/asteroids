@@ -7,7 +7,7 @@ import { AsteroidOutsideEvent } from '../events/asteroid.outside.event.js';
 import { AsteroidCreatedEvent } from '../events/asteroid.created.event.js';
 
 export class AsteroidMesh extends THREE.Mesh {
-  static SPEED = 0.5
+  static SPEED = 1
 
   direction = new THREE.Vector3();
 
