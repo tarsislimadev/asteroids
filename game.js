@@ -183,9 +183,7 @@ export class Game {
   }
 
   update(isAI) {
-    console.log('update game', { isAI })
-
-    if (true || isAI) {
+    if (isAI) {
       const input = [
         this.player.getSensorData(0),
         this.player.getSensorData(1),
