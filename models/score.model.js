@@ -8,11 +8,9 @@ export class ScoreModel extends Model {
   constructor() {
     super();
     this.domElement.id = 'score';
-    this.domElement.style.position = 'fixed';
     this.domElement.style.top = '1rem';
     this.domElement.style.left = '1rem';
     this.domElement.style.fontSize = '1rem';
-    this.domElement.style.color = '#ffffff';
     this.init();
     this.update();
   }
