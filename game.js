@@ -15,7 +15,7 @@ import { BulletOutsideEvent } from './events/bullet.outside.event.js'
 import { PlayerShotEvent } from './events/player.shot.event.js'
 import { GameWinEvent } from './events/game.win.event.js';
 
-export class Game extends EventTarget {
+export class Game {
   static MAX_ASTEROIDS = 100;
   static MAX_SCORE_POINTS = 100;
 
@@ -30,7 +30,6 @@ export class Game extends EventTarget {
   asteroidInterval = null;
 
   constructor(width, height) {
-    super();
     this.scene.add(this.group);
     this.group.add(this.light);
     this.group.add(this.camera);
