@@ -14,6 +14,7 @@ import { AsteroidOutsideEvent } from './events/asteroid.outside.event.js';
 import { BulletOutsideEvent } from './events/bullet.outside.event.js'
 import { PlayerShotEvent } from './events/player.shot.event.js'
 import { GameWinEvent } from './events/game.win.event.js';
+import { NeuralNetwork } from './neural.network.js';
 
 export class Game {
   static MAX_ASTEROIDS = 100;
@@ -37,7 +38,6 @@ export class Game {
     this.player.start();
     this.renderer.setSize(width, height);
     this.setWindowEvents();
-    this.setKeyboardEvents();
   }
 
   setWindowEvents() {
@@ -127,7 +127,17 @@ export class Game {
     }
   }
 
-  start() {
+  enableAIControls() {
+
+  }
+
+  start(type) {
+    if (type === NeuralNetwork.NAME) {
+      // fixme
+    } else {
+      this.setKeyboardEvents();
+    }
+
     this.update();
     this.asteroidInterval = setInterval(() => this.addAsteroid(), 100);
   }

@@ -1,1 +1,3 @@
-export class NeuralNetwork { }
+export class NeuralNetwork {
+    static NAME = 'AI';
+}
