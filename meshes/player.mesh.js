@@ -1,16 +1,31 @@
 import * as THREE from 'three';
 
+const directions = ['n', 'ne', 'e', 'se', 's', 'sw', 'w', 'nw']
+
+class SensorMesh extends THREE.Mesh {
+  constructor(name) {
+    const geometry = new THREE.BoxGeometry(1, 1, 1);
+    const material = new THREE.MeshBasicMaterial({ color: 0xffffff });
+    super(geometry, material)
+    this.userData['name'] = name;
+  }
+}
+
 export class PlayerMesh extends THREE.Mesh {
   state = { shoot: 0, rotateRight: 0, rotateLeft: 0, moveForward: 0, moveBackward: 0, }
 
   createBullet = null;
+
+  getAsteroids = null;
 
   rotationInterval = null;
   forwardMoveInterval = null;
   backwardMoveInterval = null;
   shotInterval = null;
 
-  constructor({ createBullet } = {}) {
+  sensors = Array.from(Array(8)).map((_, i) => new SensorMesh(directions[i]))
+
+  constructor({ createBullet, getAsteroids } = {}) {
     const geometry = new THREE.BufferGeometry();
     const vertices = new Float32Array([0.0, 1.0, 0.0, -1.0, -1.0, 0.0, 1.0, -1.0, 0.0]);
     geometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
@@ -19,6 +34,13 @@ export class PlayerMesh extends THREE.Mesh {
     super(geometry, new THREE.MeshBasicMaterial({ vertexColors: true }));
 
     this.createBullet = createBullet;
+    this.getAsteroids = getAsteroids;
+
+    this.sensors.map((s, index) => {
+      const angle = (index * 2 * Math.PI) / this.sensors.length;
+      s.rotation.z = angle;
+      this.add(s)
+    })
   }
 
   start() {
@@ -85,5 +107,16 @@ export class PlayerMesh extends THREE.Mesh {
   resetRotation() {
     this.rotation.set(0, 0, 0);
     return this;
+  }
+
+  getSensorData(index) {
+    return this.getAsteroids().some((ast) => {
+      const boxA = new THREE.Box3().setFromObject(this.sensors[index]);
+      const boxB = new THREE.Box3().setFromObject(ast);
+
+      const intersects = boxA.intersectsBox(boxB) // this.sensors[index].intersectsBox(ast)
+      if (intersects) console.log('intersects', { intersects, ast, index, sensor: this.sensors[index], boxA, boxB })
+      return intersects
+    })
   }
 }

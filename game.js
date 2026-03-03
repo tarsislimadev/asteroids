@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import synaptic from 'synaptic';
 import { AsteroidMesh } from './meshes/asteroid.mesh.js';
 import { BulletMesh } from './meshes/bullet.mesh.js';
 import { PlayerMesh } from './meshes/player.mesh.js';
@@ -20,6 +21,8 @@ export class Game {
   static MAX_ASTEROIDS = 100;
   static MAX_SCORE_POINTS = 100;
 
+  neural_network = [this.createNeuralNetwork()];
+
   score = new ScoreModel();
   asteroids = [];
   scene = new THREE.Scene();
@@ -27,7 +30,7 @@ export class Game {
   renderer = new WebGLRenderer();
   camera = new PerspectiveCamera();
   light = new AmbientLight();
-  player = new PlayerMesh({ createBullet: () => this.addBullet() });
+  player = new PlayerMesh({ createBullet: () => this.addBullet(), getAsteroids: () => this.getAsteroids() });
   asteroidInterval = null;
 
   constructor(width, height) {
@@ -88,17 +91,27 @@ export class Game {
     });
   }
 
+  runPlayer(action, startStop) {
+    switch (action) {
+      case 'left': startStop ? this.player.startRotateLeft() : this.player.stopRotateLeft(); break;
+      case 'right': startStop ? this.player.startRotateRight() : this.player.stopRotateRight(); break;
+      case 'up': startStop ? this.player.startMoveForward() : this.player.stopMoveForward(); break;
+      case 'down': startStop ? this.player.startMoveBackward() : this.player.stopMoveBackward(); break;
+      case 'shoot': startStop ? this.player.startShot() : this.player.stopShot(); break;
+    }
+  }
+
   setKeyboardEvents() {
     ['keydown', 'keyup'].map(event_name => {
       window.addEventListener(event_name, (event) => {
         event.preventDefault();
         const isKeyDown = event_name === 'keydown' ? 1 : 0;
         switch (event.key) {
-          case 'ArrowLeft': isKeyDown ? this.player.startRotateLeft() : this.player.stopRotateLeft(); break;
-          case 'ArrowRight': isKeyDown ? this.player.startRotateRight() : this.player.stopRotateRight(); break;
-          case 'ArrowUp': isKeyDown ? this.player.startMoveForward() : this.player.stopMoveForward(); break;
-          case 'ArrowDown': isKeyDown ? this.player.startMoveBackward() : this.player.stopMoveBackward(); break;
-          case ' ': isKeyDown ? this.player.startShot() : this.player.stopShot(); break;
+          case 'ArrowLeft': this.runPlayer('left', isKeyDown); break;
+          case 'ArrowRight': this.runPlayer('right', isKeyDown); break;
+          case 'ArrowUp': this.runPlayer('up', isKeyDown); break;
+          case 'ArrowDown': this.runPlayer('down', isKeyDown); break;
+          case ' ': this.runPlayer('shoot', isKeyDown); break;
         }
       });
     });
@@ -132,13 +145,13 @@ export class Game {
   }
 
   start(type) {
-    if (type === NeuralNetwork.NAME) {
-      // fixme
-    } else {
+    let isAI = type === NeuralNetwork.NAME
+
+    if (!isAI) {
       this.setKeyboardEvents();
     }
 
-    this.update();
+    this.update(isAI);
     this.asteroidInterval = setInterval(() => this.addAsteroid(), 100);
   }
 
@@ -165,9 +178,38 @@ export class Game {
 
   stop() { clearInterval(this.asteroidInterval); }
 
-  update() {
+  getNeuralNetwork() {
+    return this.neural_network[this.neural_network.length - 1]
+  }
+
+  update(isAI) {
+    console.log('update game', { isAI })
+
+    if (true || isAI) {
+      const input = [
+        this.player.getSensorData(0),
+        this.player.getSensorData(1),
+        this.player.getSensorData(2),
+        this.player.getSensorData(3),
+        this.player.getSensorData(4),
+        this.player.getSensorData(5),
+        this.player.getSensorData(6),
+        this.player.getSensorData(7),
+      ];
+
+      const output = this.getNeuralNetwork().activate(input);
+      // this.getNeuralNetwork().propagate(0.3, [1]);
+
+      const [left, right, up, down, shoot] = output
+      this.runPlayer('left', left);
+      this.runPlayer('right', right);
+      this.runPlayer('up', up);
+      this.runPlayer('down', down);
+      this.runPlayer('shoot', shoot);
+    }
+
     this.renderer.render(this.scene, this.camera);
-    requestAnimationFrame(() => this.update());
+    requestAnimationFrame(() => this.update(isAI));
   }
 
   reset() {
@@ -199,5 +241,28 @@ export class Game {
       bullet.stop();
       this.group.remove(bullet);
     });
+  }
+
+  createNeuralNetwork() {
+    const inputLayer = new synaptic.Layer(8);
+    const hiddenLayer1 = new synaptic.Layer(10);
+    const hiddenLayer2 = new synaptic.Layer(10);
+    const hiddenLayer3 = new synaptic.Layer(10);
+    const outputLayer = new synaptic.Layer(5);
+
+    // Connect layers 
+    inputLayer.project(hiddenLayer1);
+    hiddenLayer1.project(hiddenLayer2);
+    hiddenLayer2.project(hiddenLayer3);
+    hiddenLayer3.project(outputLayer);
+
+    // Build network 
+    const net = new synaptic.Network({
+      input: inputLayer,
+      hidden: [hiddenLayer1, hiddenLayer2, hiddenLayer3],
+      output: outputLayer,
+    });
+
+    return net;
   }
 }
