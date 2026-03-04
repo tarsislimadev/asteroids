@@ -4,6 +4,7 @@ const directions = ['n', 'ne', 'e', 'se', 's', 'sw', 'w', 'nw']
 
 class SensorMesh extends THREE.Mesh {
   constructor(name) {
+    consolee.log('SensorMesh.constructor', { name })
     const geometry = new THREE.BoxGeometry(.1, .1, 10);
     const material = new THREE.MeshBasicMaterial({ color: 0xffffff });
     super(geometry, material)
@@ -26,6 +27,7 @@ export class PlayerMesh extends THREE.Mesh {
   sensors = Array.from(Array(8)).map((_, i) => new SensorMesh(directions[i]))
 
   constructor({ createBullet, getAsteroids } = {}) {
+    consolee.log('PlayerMesh.constructor', { createBullet, getAsteroids })
     const geometry = new THREE.BufferGeometry();
     const vertices = new Float32Array([0.0, 1.0, 0.0, -1.0, -1.0, 0.0, 1.0, -1.0, 0.0]);
     geometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
@@ -45,11 +47,13 @@ export class PlayerMesh extends THREE.Mesh {
   }
 
   start() {
+    consolee.log('PlayerMesh.start', {})
     this.update();
     this.interval = setInterval(() => this.update(), 1e3 / 60);
   }
 
   update() {
+    consolee.log('PlayerMesh.update', {})
     if (this.state.rotateLeft) this.rotateLeft();
     if (this.state.rotateRight) this.rotateRight();
     if (this.state.moveForward) this.moveForward();
@@ -58,59 +62,101 @@ export class PlayerMesh extends THREE.Mesh {
   }
 
   stop() {
+    consolee.log('PlayerMesh.stop', {})
     if (this.interval) {
       clearInterval(this.interval);
       this.interval = null;
     }
   }
 
-  startRotateLeft() { this.state.rotateLeft = 1 }
+  startRotateLeft() {
+    consolee.log('PlayerMesh.startRotateLeft', {})
+    this.state.rotateLeft = 1
+  }
 
-  stopRotateLeft() { this.state.rotateLeft = 0; }
+  stopRotateLeft() {
+    consolee.log('PlayerMesh.stopRotateLeft', {})
+    this.state.rotateLeft = 0;
+  }
 
-  rotateLeft() { this.rotation.z += 0.1; return this; }
+  rotateLeft() {
+    consolee.log('PlayerMesh.rotateLeft', {})
+    this.rotation.z += 0.1; return this;
+  }
 
-  startRotateRight() { this.state.rotateRight = 1; }
+  startRotateRight() {
+    consolee.log('PlayerMesh.startRotateRight', {})
+    this.state.rotateRight = 1;
+  }
 
-  stopRotateRight() { this.state.rotateRight = 0; }
+  stopRotateRight() {
+    consolee.log('PlayerMesh.stopRotateRight', {})
+    this.state.rotateRight = 0;
+  }
 
-  rotateRight() { this.rotation.z -= 0.1; return this; }
+  rotateRight() {
+    consolee.log('PlayerMesh.rotateRight', {})
+    this.rotation.z -= 0.1; return this;
+  }
 
-  startMoveForward() { this.state.moveForward = 1; }
+  startMoveForward() {
+    consolee.log('PlayerMesh.startMoveForward', {})
+    this.state.moveForward = 1;
+  }
 
-  stopMoveForward() { this.state.moveForward = 0; }
+  stopMoveForward() {
+    consolee.log('PlayerMesh.stopMoveForward', {})
+    this.state.moveForward = 0;
+  }
 
   moveForward() {
+    consolee.log('PlayerMesh.moveForward', {})
     this.position.x += Math.sin(-this.rotation.z) * 0.1;
     this.position.y += Math.cos(-this.rotation.z) * 0.1;
     return this;
   }
 
-  startMoveBackward() { this.state.moveBackward = 1; }
+  startMoveBackward() {
+    consolee.log('PlayerMesh.startMoveBackward', {})
+    this.state.moveBackward = 1;
+  }
 
-  stopMoveBackward() { this.state.moveBackward = 0; }
+  stopMoveBackward() {
+    consolee.log('PlayerMesh.stopMoveBackward', {})
+    this.state.moveBackward = 0;
+  }
 
   moveBackward() {
+    consolee.log('PlayerMesh.moveBackward', {})
     this.position.x -= Math.sin(-this.rotation.z) * 0.1;
     this.position.y -= Math.cos(-this.rotation.z) * 0.1;
     return this;
   }
 
-  startShot() { this.state.shoot = 1; }
+  startShot() {
+    consolee.log('PlayerMesh.startShot', {})
+    this.state.shoot = 1;
+  }
 
-  stopShot() { this.state.shoot = 0; }
+  stopShot() {
+    consolee.log('PlayerMesh.stopShot', {})
+    this.state.shoot = 0;
+  }
 
   resetPosition() {
+    consolee.log('PlayerMesh.resetPosition', {})
     this.position.set(0, 0, 0);
     return this;
   }
 
   resetRotation() {
+    consolee.log('PlayerMesh.resetRotation', {})
     this.rotation.set(0, 0, 0);
     return this;
   }
 
   getSensorData(index) {
+    consolee.log('PlayerMesh.getSensorData', { index })
     const boxSensor = new THREE.Box3().setFromObject(this.sensors[index]);
     return this.getAsteroids()
       .map((ast) => new THREE.Box3().setFromObject(ast))
