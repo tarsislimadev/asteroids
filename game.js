@@ -41,7 +41,6 @@ export class Game {
     this.group.add(this.light);
     this.group.add(this.camera);
     this.group.add(this.player);
-    this.player.start();
     this.renderer.setSize(width, height);
     this.setWindowEvents();
   }
@@ -182,6 +181,9 @@ export class Game {
 
   start() {
     consolee.log('Game.start', {})
+
+    this.player.start();
+
     this.neural_networks.push(this.createNeuralNetwork())
     this.score.setGeneration(this.neural_networks.length)
 
