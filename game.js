@@ -225,9 +225,13 @@ export class Game {
   runWithAI() {
     consolee.log('Game.runWithAI', {})
 
-    const input = Array.from(Array(8)).map((_, i) => this.player.getSensorData(i));
+    const nn = this.getNeuralNetwork();
 
-    const output = this.getNeuralNetwork().activate(input).map((value) => value >= 0.5);
+    const input = Array.from(Array(8)).map((_, i) => this.player.getSensorData(i));
+    const output = nn.activate(input).map((value) => value >= 0.5);
+
+    const expect_output = [output[0] || 1, output[1] || 1, output[2] || 1, output[3] || 1, output[4] || 0];
+    nn.propagate(0.5, expect_output);
 
     this.runPlayer('left', output[0]);
     this.runPlayer('right', output[1]);
