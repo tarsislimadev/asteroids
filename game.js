@@ -239,7 +239,8 @@ export class Game {
     this.runPlayer('down', output[3]);
     this.runPlayer('shoot', output[4]);
 
-    this.inputs_outputs.push({ input, output });
+    // Maintain a rolling history of the last 1000 input/output pairs for training or analysis
+    this.inputs_outputs = [...this.inputs_outputs.slice(-999), { input, output }];
   }
 
   update() {
