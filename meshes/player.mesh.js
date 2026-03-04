@@ -4,7 +4,7 @@ const directions = ['n', 'ne', 'e', 'se', 's', 'sw', 'w', 'nw']
 
 class SensorMesh extends THREE.Mesh {
   constructor(name) {
-    const geometry = new THREE.BoxGeometry(1, 1, 1);
+    const geometry = new THREE.BoxGeometry(.1, .1, 10);
     const material = new THREE.MeshBasicMaterial({ color: 0xffffff });
     super(geometry, material)
     this.userData['name'] = name;
@@ -38,6 +38,7 @@ export class PlayerMesh extends THREE.Mesh {
 
     this.sensors.map((s, index) => {
       const angle = (index * 2 * Math.PI) / this.sensors.length;
+      s.rotation.x = Math.PI;
       s.rotation.z = angle;
       this.add(s)
     })
@@ -110,13 +111,9 @@ export class PlayerMesh extends THREE.Mesh {
   }
 
   getSensorData(index) {
-    return this.getAsteroids().some((ast) => {
-      const boxA = new THREE.Box3().setFromObject(this.sensors[index]);
-      const boxB = new THREE.Box3().setFromObject(ast);
-
-      const intersects = boxA.intersectsBox(boxB) // this.sensors[index].intersectsBox(ast)
-      if (intersects) console.log('intersects', { intersects, ast, index, sensor: this.sensors[index], boxA, boxB })
-      return intersects
-    })
+    const boxSensor = new THREE.Box3().setFromObject(this.sensors[index]);
+    return this.getAsteroids()
+      .map((ast) => new THREE.Box3().setFromObject(ast))
+      .some((boxAst) => boxSensor.intersectsBox(boxAst));
   }
 }

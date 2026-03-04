@@ -4,6 +4,8 @@ export class ScoreModel extends Model {
   domElement = document.createElement('div');
   points = -1
   lives = -1
+  generation = 0
+  isAI = false
 
   constructor() {
     super();
@@ -31,8 +33,24 @@ export class ScoreModel extends Model {
     this.lives = lives
   }
 
+  setIsAI(isAI = false) {
+    this.isAI = isAI
+  }
+
+  setGeneration(generation) {
+    this.generation = +generation
+  }
+
+  getGeneration() {
+    return +this.generation
+  }
+
   getScoreText() {
-    return `Score: ${this.getPoints()} | Lives: ${this.getLives()}`
+    return [
+      `Score: ${this.getPoints()}`,
+      `Lives: ${this.getLives()}`,
+      this.isAI ? `Generation: ${this.generation}` : null,
+    ].filter(Boolean).join(' | ')
   }
 
   update() {

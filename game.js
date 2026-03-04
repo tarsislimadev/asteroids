@@ -21,7 +21,9 @@ export class Game {
   static MAX_ASTEROIDS = 100;
   static MAX_SCORE_POINTS = 100;
 
-  neural_network = [this.createNeuralNetwork()];
+  isAI = false;
+  neural_networks = [];
+  inputs_outputs = [];
 
   score = new ScoreModel();
   asteroids = [];
@@ -141,17 +143,28 @@ export class Game {
   }
 
   enableAIControls() {
-
+    this.score.setIsAI(true);
   }
 
-  start(type) {
-    let isAI = type === NeuralNetwork.NAME
+  setPlayerType(type) {
+    this.isAI = type === NeuralNetwork.NAME;
 
-    if (!isAI) {
+    if (this.isAI) {
+      this.enableAIControls();
+    } else {
       this.setKeyboardEvents();
     }
+  }
 
-    this.update(isAI);
+  getWeights() {
+    // this.neural_networks[].layers.hidden[].list[].connections.inputs[].weight
+  }
+
+  start() {
+    this.neural_networks.push(this.createNeuralNetwork())
+    this.score.setGeneration(this.neural_networks.length)
+
+    this.update();
     this.asteroidInterval = setInterval(() => this.addAsteroid(), 100);
   }
 
@@ -179,35 +192,28 @@ export class Game {
   stop() { clearInterval(this.asteroidInterval); }
 
   getNeuralNetwork() {
-    return this.neural_network[this.neural_network.length - 1]
+    return this.neural_networks[this.neural_networks.length - 1]
   }
 
-  update(isAI) {
-    if (isAI) {
-      const input = [
-        this.player.getSensorData(0),
-        this.player.getSensorData(1),
-        this.player.getSensorData(2),
-        this.player.getSensorData(3),
-        this.player.getSensorData(4),
-        this.player.getSensorData(5),
-        this.player.getSensorData(6),
-        this.player.getSensorData(7),
-      ];
+  runWithAI() {
+    const input = Array.from(Array(8)).map((_, i) => this.player.getSensorData(i));
 
-      const output = this.getNeuralNetwork().activate(input);
-      // this.getNeuralNetwork().propagate(0.3, [1]);
+    const output = this.getNeuralNetwork().activate(input).map((value) => value >= 0.5);
 
-      const [left, right, up, down, shoot] = output
-      this.runPlayer('left', left);
-      this.runPlayer('right', right);
-      this.runPlayer('up', up);
-      this.runPlayer('down', down);
-      this.runPlayer('shoot', shoot);
-    }
+    this.runPlayer('left', output[0]);
+    this.runPlayer('right', output[1]);
+    this.runPlayer('up', output[2]);
+    this.runPlayer('down', output[3]);
+    this.runPlayer('shoot', output[4]);
+
+    this.inputs_outputs.push({ input, output });
+  }
+
+  update() {
+    if (this.isAI) this.runWithAI();
 
     this.renderer.render(this.scene, this.camera);
-    requestAnimationFrame(() => this.update(isAI));
+    requestAnimationFrame(() => this.update());
   }
 
   reset() {
@@ -260,6 +266,11 @@ export class Game {
       hidden: [hiddenLayer1, hiddenLayer2, hiddenLayer3],
       output: outputLayer,
     });
+
+    if (this.inputs_outputs.length > 0) {
+      const trainer = new synaptic.Trainer(net);
+      trainer.train(this.inputs_outputs)
+    }
 
     return net;
   }

@@ -5,7 +5,7 @@ import { NeuralNetwork } from './neural.network.js';
 
 const game = new Game(400, 400);
 
-const createButton = (text, onclick = () => console.log('not implemented')) => {
+const createButton = (text, onclick) => {
   const btn = document.createElement('button');
   btn.textContent = text;
   btn.addEventListener('click', () => onclick());
@@ -13,12 +13,14 @@ const createButton = (text, onclick = () => console.log('not implemented')) => {
 }
 
 const humanButton = createButton('Human', () => {
-  game.start('human')
+  game.setPlayerType('human');
+  game.start();
   buttons.remove();
 });
 
 const aiButton = createButton(NeuralNetwork.NAME, () => {
-  game.start(NeuralNetwork.NAME)
+  game.setPlayerType(NeuralNetwork.NAME);
+  game.start();
   buttons.remove();
 });
 
