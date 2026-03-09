@@ -57,13 +57,11 @@ export class Game {
 
     window.addEventListener(GameOverEvent.NAME, () => {
       consolee.log('Game.setWindowEvents.GameOverEvent', {})
-      alert('Game over! ' + this.score.toString());
       this.reset();
     })
 
     window.addEventListener(GameWinEvent.NAME, () => {
       consolee.log('Game.setWindowEvents.GameWinEvent', {})
-      alert('You won! ' + this.score.toString());
       this.reset();
     })
 
