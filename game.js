@@ -17,13 +17,14 @@ import { PlayerShotEvent } from './events/player.shot.event.js'
 import { GameWinEvent } from './events/game.win.event.js';
 import { NeuralNetwork } from './neural.network.js';
 
+const consolee = window.consolee || {}
+
 export class Game {
   static MAX_ASTEROIDS = 100;
   static MAX_SCORE_POINTS = 100;
 
   isAI = false;
   neural_networks = [];
-  inputs_outputs = [];
 
   score = new ScoreModel();
   asteroids = [];
@@ -230,17 +231,11 @@ export class Game {
     const input = Array.from(Array(8)).map((_, i) => this.player.getSensorData(i));
     const output = nn.activate(input).map((value) => value >= 0.5);
 
-    const expect_output = [output[0] || 1, output[1] || 1, output[2] || 1, output[3] || 1, output[4] || 0];
-    nn.propagate(0.5, expect_output);
-
     this.runPlayer('left', output[0]);
     this.runPlayer('right', output[1]);
     this.runPlayer('up', output[2]);
     this.runPlayer('down', output[3]);
     this.runPlayer('shoot', output[4]);
-
-    // Maintain a rolling history of the last 1000 input/output pairs for training or analysis
-    this.inputs_outputs = [...this.inputs_outputs.slice(-999), { input, output }];
   }
 
   update() {
@@ -302,17 +297,16 @@ export class Game {
     hiddenLayer3.project(outputLayer);
 
     // Build network 
-    const net = new synaptic.Network({
-      input: inputLayer,
-      hidden: [hiddenLayer1, hiddenLayer2, hiddenLayer3],
-      output: outputLayer,
-    });
+    if (this.neural_networks.length > 0) {
+      return synaptic.Network.fromJSON(this.getNeuralNetwork().toJSON())
+    } else {
+      const net = new synaptic.Network({
+        input: inputLayer,
+        hidden: [hiddenLayer1, hiddenLayer2, hiddenLayer3],
+        output: outputLayer,
+      });
 
-    if (this.inputs_outputs.length > 0) {
-      const trainer = new synaptic.Trainer(net);
-      trainer.train(this.inputs_outputs)
+      return net;
     }
-
-    return net;
   }
 }
