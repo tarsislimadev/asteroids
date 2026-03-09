@@ -5,7 +5,7 @@ const directions = ['n', 'ne', 'e', 'se', 's', 'sw', 'w', 'nw']
 class SensorMesh extends THREE.Mesh {
   constructor(name) {
     consolee.log('SensorMesh.constructor', { name })
-    const geometry = new THREE.BoxGeometry(.1, .1, 10);
+    const geometry = new THREE.BoxGeometry(.1, .1, 2);
     const material = new THREE.MeshBasicMaterial({ color: 0xffffff });
     super(geometry, material)
     this.userData['name'] = name;
@@ -38,11 +38,23 @@ export class PlayerMesh extends THREE.Mesh {
     this.createBullet = createBullet;
     this.getAsteroids = getAsteroids;
 
-    this.sensors.map((s, index) => {
-      const angle = (index * 2 * Math.PI) / this.sensors.length;
-      s.rotation.x = Math.PI;
-      s.rotation.z = angle;
-      this.add(s)
+    const sensors = [
+      [+0, +0, +2],
+      [+Math.PI / +4, +2, +1],
+      [-Math.PI / +2, +2, +0],
+      [-Math.PI / +4, +2, -1],
+      [+0, +0, -2],
+      [+Math.PI / +4, -2, -1],
+      [-Math.PI / +2, -2, +0],
+      [-Math.PI / +4, -2, +1],
+    ]
+
+    this.sensors.map((_, i) => sensors[i]).map(([ry, px, py], i) => {
+      this.sensors[i].rotation.x = -Math.PI / 2
+      this.sensors[i].rotation.y = ry
+      this.sensors[i].position.x = px
+      this.sensors[i].position.y = py
+      this.add(this.sensors[i])
     })
   }
 
