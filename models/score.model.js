@@ -96,4 +96,8 @@ export class ScoreModel extends Model {
     consolee.log('ScoreModel.toString', {})
     return this.getScoreText()
   }
+
+  toJSON() {
+    return [this.getPoints(), this.getLives(), this.getGeneration()]
+  }
 }

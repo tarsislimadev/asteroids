@@ -183,7 +183,7 @@ export class Game {
 
     this.player.start();
 
-    this.neural_networks.push(this.createNeuralNetwork())
+    this.neural_networks.push({ score: this.score.toJSON(), nn: this.createNeuralNetwork() })
     this.score.setGeneration(this.neural_networks.length)
 
     this.update();
@@ -220,7 +220,7 @@ export class Game {
 
   getNeuralNetwork() {
     consolee.log('Game.getNeuralNetwork', {})
-    return this.neural_networks[this.neural_networks.length - 1]
+    return this.neural_networks[this.neural_networks.length - 1].nn
   }
 
   runWithAI() {
