@@ -1,4 +1,4 @@
-window.DEBUG = window.location.hostname.toString().includes('localhost');
+window.DEBUG = true // window.location.hostname.toString().includes('localhost');
 
 document.body.style.margin = 0;
 
