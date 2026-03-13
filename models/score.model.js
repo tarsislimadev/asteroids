@@ -1,5 +1,7 @@
 import { Model } from './model.js'
 
+const consolee = window.consolee || {}
+
 export class ScoreModel extends Model {
   domElement = document.createElement('div');
   points = -1
