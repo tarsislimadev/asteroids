@@ -19,12 +19,74 @@ import { NeuralNetwork } from './neural.network.js';
 
 const consolee = window.consolee || {}
 
+class NeuralNetworkManager {
+  generation = -1
+  neural_networks = [];
+
+  constructor(params) {
+    this.params = params;
+  }
+
+  getNeuralNetwork() {
+    consolee.log('Game.getNeuralNetwork', {})
+    return this.neural_networks[this.neural_networks.length - 1].nn
+  }
+
+  getWeights() {
+    // this.neural_networks[].layers.hidden[].list[].connections.inputs[].weight
+  }
+
+  createNeuralNetwork() {
+    consolee.log('Game.createNeuralNetwork', {})
+
+    const inputLayer = new synaptic.Layer(8);
+    const hiddenLayer1 = new synaptic.Layer(10);
+    const hiddenLayer2 = new synaptic.Layer(10);
+    const hiddenLayer3 = new synaptic.Layer(10);
+    const outputLayer = new synaptic.Layer(5);
+
+    // Connect layers 
+    inputLayer.project(hiddenLayer1);
+    hiddenLayer1.project(hiddenLayer2);
+    hiddenLayer2.project(hiddenLayer3);
+    hiddenLayer3.project(outputLayer);
+
+    // Build network 
+    if (this.neural_networks.length > 0) {
+      return synaptic.Network.fromJSON(this.getNeuralNetwork().toJSON())
+    } else {
+      return new synaptic.Network({
+        input: inputLayer,
+        hidden: [hiddenLayer1, hiddenLayer2, hiddenLayer3],
+        output: outputLayer,
+      });
+    }
+  }
+
+  saveGeneration() {
+    this.neural_networks.push({
+      score: this.params.getScore?.(),
+      nn: this.createNeuralNetwork()
+    })
+
+    this.generation = this.neural_networks.length
+  }
+
+  activate(input) {
+    return this.getNeuralNetwork()
+      .activate(input)
+      .map((value) => value >= 0.5);
+  }
+}
+
 export class Game {
   static MAX_ASTEROIDS = 100;
   static MAX_SCORE_POINTS = 100;
 
   isAI = false;
-  neural_networks = [];
+  nn_manager = new NeuralNetworkManager({
+    getScore: () => this.score.toJSON(),
+  });
 
   score = new ScoreModel();
   asteroids = [];
@@ -48,13 +110,6 @@ export class Game {
 
   setWindowEvents() {
     consolee.log('Game.setWindowEvents', {})
-
-    window.addEventListener('resize', () => {
-      consolee.log('Game.setWindowEvents.resize', {})
-      this.camera.aspect = window.innerWidth / window.innerHeight;
-      this.camera.updateProjectionMatrix();
-      this.renderer.setSize(window.innerWidth, window.innerHeight);
-    });
 
     window.addEventListener(GameOverEvent.NAME, () => {
       consolee.log('Game.setWindowEvents.GameOverEvent', {})
@@ -174,18 +229,11 @@ export class Game {
     }
   }
 
-  getWeights() {
-    // this.neural_networks[].layers.hidden[].list[].connections.inputs[].weight
-  }
-
   start() {
     consolee.log('Game.start', {})
 
     this.player.start();
-
-    this.neural_networks.push({ score: this.score.toJSON(), nn: this.createNeuralNetwork() })
-    this.score.setGeneration(this.neural_networks.length)
-
+    this.nn_manager.saveGeneration();
     this.update();
     this.asteroidInterval = setInterval(() => this.addAsteroid(), 100);
   }
@@ -218,19 +266,11 @@ export class Game {
     clearInterval(this.asteroidInterval);
   }
 
-  getNeuralNetwork() {
-    consolee.log('Game.getNeuralNetwork', {})
-    return this.neural_networks[this.neural_networks.length - 1].nn
-  }
-
   runWithAI() {
     consolee.log('Game.runWithAI', {})
 
-    const nn = this.getNeuralNetwork();
-
     const input = Array.from(Array(8)).map((_, i) => this.player.getSensorData(i));
-    const output = nn.activate(input).map((value) => value >= 0.5);
-
+    const output = this.nn_manager.activate(input)
     this.runPlayer('left', output[0]);
     this.runPlayer('right', output[1]);
     this.runPlayer('up', output[2]);
@@ -280,33 +320,5 @@ export class Game {
       bullet.stop();
       this.group.remove(bullet);
     });
-  }
-
-  createNeuralNetwork() {
-    consolee.log('Game.createNeuralNetwork', {})
-    const inputLayer = new synaptic.Layer(8);
-    const hiddenLayer1 = new synaptic.Layer(10);
-    const hiddenLayer2 = new synaptic.Layer(10);
-    const hiddenLayer3 = new synaptic.Layer(10);
-    const outputLayer = new synaptic.Layer(5);
-
-    // Connect layers 
-    inputLayer.project(hiddenLayer1);
-    hiddenLayer1.project(hiddenLayer2);
-    hiddenLayer2.project(hiddenLayer3);
-    hiddenLayer3.project(outputLayer);
-
-    // Build network 
-    if (this.neural_networks.length > 0) {
-      return synaptic.Network.fromJSON(this.getNeuralNetwork().toJSON())
-    } else {
-      const net = new synaptic.Network({
-        input: inputLayer,
-        hidden: [hiddenLayer1, hiddenLayer2, hiddenLayer3],
-        output: outputLayer,
-      });
-
-      return net;
-    }
   }
 }
