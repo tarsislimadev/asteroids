@@ -70,6 +70,7 @@ class NeuralNetworkManager {
     })
 
     this.generation = this.neural_networks.length
+    this.params.setGeneration?.(this.generation)
   }
 
   activate(input) {
@@ -84,8 +85,12 @@ export class Game {
   static MAX_SCORE_POINTS = 100;
 
   isAI = false;
+  isRunning = false;
+  updateFrame = null;
+  keyboardEventsSet = false;
   nn_manager = new NeuralNetworkManager({
     getScore: () => this.score.toJSON(),
+    setGeneration: (generation) => this.score.setGeneration(generation),
   });
 
   score = new ScoreModel();
@@ -171,6 +176,8 @@ export class Game {
   }
 
   setKeyboardEvents() {
+    if (this.keyboardEventsSet) return;
+    this.keyboardEventsSet = true;
     ['keydown', 'keyup'].map(event_name => {
       window.addEventListener(event_name, (event) => {
         consolee.log('Game.setKeyboardEvents', { event_name, event })
@@ -208,7 +215,10 @@ export class Game {
       } break;
       case this.score.getPoints() >= Game.MAX_SCORE_POINTS: {
         this.stop();
-        window.dispatchEvent(new GameWinEvent(this.score.getPoints()));
+        window.dispatchEvent(new GameWinEvent({
+          points: this.score.getPoints(),
+          lives: this.score.getLives(),
+        }));
       } break;
     }
   }
@@ -225,6 +235,7 @@ export class Game {
     if (this.isAI) {
       this.enableAIControls();
     } else {
+      this.score.setIsAI(false);
       this.setKeyboardEvents();
     }
   }
@@ -232,8 +243,12 @@ export class Game {
   start() {
     consolee.log('Game.start', {})
 
+    if (this.isRunning) return;
+    this.isRunning = true;
     this.player.start();
-    this.nn_manager.saveGeneration();
+    if (this.isAI && this.nn_manager.neural_networks.length === 0) {
+      this.nn_manager.saveGeneration();
+    }
     this.update();
     this.asteroidInterval = setInterval(() => this.addAsteroid(), 100);
   }
@@ -264,6 +279,12 @@ export class Game {
   stop() {
     consolee.log('Game.stop', {})
     clearInterval(this.asteroidInterval);
+    this.asteroidInterval = null;
+    this.isRunning = false;
+    if (this.updateFrame !== null) {
+      cancelAnimationFrame(this.updateFrame);
+      this.updateFrame = null;
+    }
   }
 
   runWithAI() {
@@ -280,16 +301,21 @@ export class Game {
 
   update() {
     consolee.log('Game.update', {})
+    if (!this.isRunning) return;
     if (this.isAI) this.runWithAI();
 
     this.renderer.render(this.scene, this.camera);
-    requestAnimationFrame(() => this.update());
+    this.updateFrame = requestAnimationFrame(() => this.update());
   }
 
   reset() {
     consolee.log('Game.reset', {})
+    if (this.isAI) {
+      this.nn_manager.saveGeneration();
+    }
     this.score.reset();
     this.player.stop();
+    this.player.resetState();
     this.player.resetPosition().resetRotation();
     this.removeAllBullets();
     this.removeAllAsteroids();

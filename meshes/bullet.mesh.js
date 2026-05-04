@@ -44,13 +44,14 @@ export class BulletMesh extends THREE.Mesh {
   }
 
   checkCollisions() {
-    this.getAsteroids().map(asteroid => {
+    for (const asteroid of this.getAsteroids()) {
       const distance = this.position.distanceTo(asteroid.position);
       if (distance < AsteroidConfig.radius) {
         this.stop();
         window.dispatchEvent(new AsteroidBulletCollisionEvent({ asteroid, bullet: this }));
+        return;
       }
-    });
+    }
   }
 
   update() {

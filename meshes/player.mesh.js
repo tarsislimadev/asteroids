@@ -70,7 +70,6 @@ export class PlayerMesh extends THREE.Mesh {
     if (this.state.rotateRight) this.rotateRight();
     if (this.state.moveForward) this.moveForward();
     if (this.state.moveBackward) this.moveBackward();
-    if (this.state.shoot) this.createBullet?.();
   }
 
   stop() {
@@ -78,6 +77,10 @@ export class PlayerMesh extends THREE.Mesh {
     if (this.interval) {
       clearInterval(this.interval);
       this.interval = null;
+    }
+    if (this.shotInterval) {
+      clearInterval(this.shotInterval);
+      this.shotInterval = null;
     }
   }
 
@@ -148,11 +151,25 @@ export class PlayerMesh extends THREE.Mesh {
   startShot() {
     consolee.log('PlayerMesh.startShot', {})
     this.state.shoot = 1;
+    if (!this.shotInterval) {
+      this.createBullet?.();
+      this.shotInterval = setInterval(() => this.createBullet?.(), 200);
+    }
   }
 
   stopShot() {
     consolee.log('PlayerMesh.stopShot', {})
     this.state.shoot = 0;
+    if (this.shotInterval) {
+      clearInterval(this.shotInterval);
+      this.shotInterval = null;
+    }
+  }
+
+  resetState() {
+    consolee.log('PlayerMesh.resetState', {})
+    this.state = { shoot: 0, rotateRight: 0, rotateLeft: 0, moveForward: 0, moveBackward: 0 };
+    return this;
   }
 
   resetPosition() {
